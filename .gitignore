@@ -1,0 +1,12 @@
+# 环境变量文件（包含 API Key，绝对不能提交）
+.env
+
+# Netlify 本地配置（可选）
+.netlify
+
+# Node modules（如果未来有依赖）
+node_modules/
+
+# 系统文件
+.DS_Store
+Thumbs.db
