@@ -1,8 +1,5 @@
 // netlify/functions/deepseek.js
-const fetch = require('node-fetch');
-
 exports.handler = async (event) => {
-    // 只允许 POST
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
@@ -10,10 +7,10 @@ exports.handler = async (event) => {
     const { systemPrompt, messages } = JSON.parse(event.body);
     const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
     if (!DEEPSEEK_API_KEY) {
+        console.error("Missing API key");
         return { statusCode: 500, body: 'Missing API key' };
     }
     
-    // 构建消息数组
     const apiMessages = [
         { role: 'system', content: systemPrompt },
         ...messages
