@@ -721,47 +721,53 @@
     Object.assign(mbtiAnalysis, extendedAnalysis);
     
     function displayResults() {
-        const scores = computeScores();
-        const maxPossible = computeMaxPossible();
-        const mbtiRaw = inferMBTIByUserLogic(scores, maxPossible);
-        const cleanType = mbtiRaw.replace(/[^A-Z]/g, '');
-        const analysis = mbtiAnalysis[cleanType] || defaultAnalysis;
+    const scores = computeScores();
+    const maxPossible = computeMaxPossible();
+    const mbtiRaw = inferMBTIByUserLogic(scores, maxPossible);
+    const cleanType = mbtiRaw.replace(/[^A-Z]/g, '');
+    const analysis = mbtiAnalysis[cleanType] || defaultAnalysis;
+    
+    const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
+    let dimHtml = '';
+    for (let d of dims) {
+        let percent = (scores[d] / maxPossible[d] * 100).toFixed(0);
+        dimHtml += `<div class="dim-bar"><div style="display:flex;justify-content:space-between"><span>${d}</span><span>${scores[d]}/${maxPossible[d]} (${percent}%)</span></div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div></div>`;
+    }
+    
+    // 从 localStorage 读取已有的昵称
+    const storedNickname = localStorage.getItem('userNickname') || '';
+    
+    // 构建结果 HTML，最后加上昵称输入框和跳转按钮
+    const resultHTML = `
+        <div style="text-align:center;margin-bottom:20px;"><div style="font-size:2rem;font-weight:800;background:#1e293b;display:inline-block;padding:6px 24px;border-radius:60px;color:white;">${mbtiRaw}</div></div>
+        <div><strong>🧠 认知风格</strong><br>${analysis.cognitive}</div><hr>
+        <div><strong>⚠️ 优势与盲点</strong><br>${analysis.blindspot}</div><hr>
+        <div><strong>🌱 成长建议</strong><br>${analysis.growth}</div><hr>
+        <div><strong>🤖 Copilot分身预告</strong><br>${analysis.copilot}</div><hr>
+        <div><strong>📊 八维得分</strong><br>${dimHtml}</div>
         
-        const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
-        let dimHtml = '';
-        for (let d of dims) {
-            let percent = (scores[d] / maxPossible[d] * 100).toFixed(0);
-            dimHtml += `<div class="dim-bar"><div style="display:flex;justify-content:space-between"><span>${d}</span><span>${scores[d]}/${maxPossible[d]} (${percent}%)</span></div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div></div>`;
-        }
-        
-        const resultHTML = `
-            <div style="text-align:center;margin-bottom:20px;"><div style="font-size:2rem;font-weight:800;background:#1e293b;display:inline-block;padding:6px 24px;border-radius:60px;color:white;">${mbtiRaw}</div></div>
-            <div><strong>🧠 认知风格</strong><br>${analysis.cognitive}</div><hr>
-            <div><strong>⚠️ 优势与盲点</strong><br>${analysis.blindspot}</div><hr>
-            <div><strong>🌱 成长建议</strong><br>${analysis.growth}</div><hr>
-            <div><strong>🤖 Copilot分身预告</strong><br>${analysis.copilot}</div><hr>
-            <div><strong>📊 八维得分</strong><br>${dimHtml}</div>
-            <!-- 昵称输入和跳转按钮 -->
-            <div style="margin: 20px 0 12px 0;">
+        <!-- 昵称输入和跳转按钮 -->
+        <div style="margin: 20px 0 12px 0;">
             <label style="font-size:0.9rem;">👤 你的昵称（分身会这样称呼你）：</label>
             <input type="text" id="nicknameInput" placeholder="输入昵称" value="${storedNickname.replace(/"/g, '&quot;')}" style="width:100%; padding:8px 12px; border-radius:30px; border:1px solid #ccc; margin-top:6px;">
-            </div>
-            <button id="gotoCopilotBtn" style="background:#8b5cf6; color:white; border:none; padding:12px; border-radius:60px; width:100%; font-weight:600; margin-top:0; cursor:pointer;">✨ 进入 Copilot 分身 ✨</button>
-            <div style="font-size:0.7rem;text-align:center;margin-top:16px;">💡 拖拽排序完成 | 结果仅供参考 | 建议4-6周后复测</div>
-        `;
-
-        const resultDiv = document.getElementById('resultArea');
-        resultDiv.innerHTML = resultHTML;
-        resultDiv.style.display = 'block';
-        resultDiv.scrollIntoView({ behavior: 'smooth' });
+        </div>
+        <button id="gotoCopilotBtn" style="background:#8b5cf6; color:white; border:none; padding:12px; border-radius:60px; width:100%; font-weight:600; margin-top:0; cursor:pointer;">✨ 进入 Copilot 分身 ✨</button>
         
-        // 隐藏问卷区域，只显示结果
-        const container = document.getElementById('questions-container');
-        if (container) container.style.display = 'none';
-
-        // 绑定跳转按钮事件
-        const gotoBtn = document.getElementById('gotoCopilotBtn');
-        if (gotoBtn) {
+        <div style="font-size:0.7rem;text-align:center;margin-top:16px;">💡 拖拽排序完成 | 结果仅供参考 | 建议4-6周后复测</div>
+    `;
+    
+    const resultDiv = document.getElementById('resultArea');
+    resultDiv.innerHTML = resultHTML;
+    resultDiv.style.display = 'block';
+    resultDiv.scrollIntoView({ behavior: 'smooth' });
+    
+    // 隐藏问卷区域，只显示结果
+    const container = document.getElementById('questions-container');
+    if (container) container.style.display = 'none';
+    
+    // 绑定跳转按钮事件
+    const gotoBtn = document.getElementById('gotoCopilotBtn');
+    if (gotoBtn) {
         gotoBtn.addEventListener('click', () => {
             const nickname = document.getElementById('nicknameInput').value.trim();
             if (!nickname) {
@@ -774,9 +780,9 @@
             localStorage.setItem('userMaxPossible', JSON.stringify(maxPossible));
             // 跳转到 copilot.html
             window.location.href = 'copilot.html';
-            });
-        }
+        });
     }
+}
     
     function resetAll() {
         initSelections();
