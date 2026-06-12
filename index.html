@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>人格认知风格 · 专注单题版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px 12px 48px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 1.6rem;
+            margin: 0 0 4px;
+            font-weight: 700;
+        }
+        .sub {
+            color: #475569;
+            font-size: 0.85rem;
+            border-left: 3px solid #8b5cf6;
+            padding-left: 12px;
+            margin: 12px 0 16px;
+        }
+        /* 单题卡片样式 */
+        .question-card {
+            background: #ffffff;
+            border: 1px solid #eef2ff;
+            border-radius: 32px;
+            padding: 24px 20px;
+            margin-bottom: 20px;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eef2ff;
+        }
+        .question-number {
+            font-size: 0.85rem;
+            color: #8b5cf6;
+            font-weight: 600;
+            background: #f3e8ff;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        .progress {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .question-text {
+            font-weight: 600;
+            font-size: 1.15rem;
+            line-height: 1.4;
+            margin-bottom: 28px;
+            color: #0f172a;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 24px;
+        }
+        .drag-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .drag-item {
+            background: #fefefe;
+            border: 1px solid #e2e8f0;
+            border-radius: 60px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .drag-item:active {
+            cursor: grabbing;
+        }
+        .drag-item.dragging {
+            opacity: 0.4;
+            background: #f1f5f9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: grabbing;
+        }
+        .drag-item.drag-over {
+            transform: scale(1.01);
+            background: #eef2ff;
+            border: 1px solid #8b5cf6;
+            box-shadow: 0 2px 8px rgba(139,92,246,0.2);
+        }
+        .drag-handle {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            user-select: none;
+            width: 28px;
+            text-align: center;
+            cursor: grab;
+        }
+        .drag-rank {
+            background: #eef2ff;
+            border-radius: 40px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #4f46e5;
+            font-size: 0.9rem;
+        }
+        .drag-letter {
+            background: #f1f5f9;
+            border-radius: 40px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748b;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        .drag-text {
+            flex: 1;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+        /* 关键词加粗样式 */
+        .drag-text strong, .drag-text b {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        /* 导航按钮 */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .nav-btn {
+            background: #f1f5f9;
+            color: #334155;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            flex: 1;
+        }
+        .nav-btn.primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .nav-btn:active { transform: scale(0.97); }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #4f46e5;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            flex: 1;
+            min-width: 130px;
+        }
+        .reset-btn { background: #64748b; }
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-top: 24px;
+        }
+        .result-area {
+            background: #fefce8;
+            border-left: 6px solid #eab308;
+        }
+        .dim-bar {
+            margin-bottom: 12px;
+        }
+        .bar-bg {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            background: #4f46e5;
+            width: 0%;
+            height: 100%;
+            border-radius: 20px;
+        }
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+        @media (max-width: 550px) {
+            .question-card { padding: 18px 16px; }
+            .drag-item { padding: 12px 14px; }
+            .drag-rank { width: 32px; height: 32px; font-size: 0.8rem; }
+            .drag-letter { width: 28px; height: 28px; font-size: 0.75rem; }
+            .drag-text { font-size: 0.85rem; }
+            .question-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>🧠 认知风格 · 专注模式</h1>
+        <div class="sub">
+            ✨ 每题单独作答，<strong>按住左边把手上下拖动</strong>即可排序<br>
+            🔝 顶部 = 最符合你 (得分3) &nbsp;&nbsp; 🔽 底部 = 最不符合 (得分0)<br>
+            📌 选项字母 (A/B/C/D) 仅用于标识，不影响排序
+        </div>
+        <div id="questions-container"></div>
+        <div class="btn-group">
+            <button id="submitBtn">📊 生成人格报告</button>
+            <button id="resetBtn" class="reset-btn">⟳ 重置所有</button>
+        </div>
+    </div>
+    <div id="resultArea" class="card result-area" style="display: none;"></div>
+    <div class="footer-note">基于荣格八维双测版 | 拖拽排序自动计分</div>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 双测版题库 (20题，带关键词加粗标记)
+    // 使用 <b>关键词</b> 来增强可读性
+    // --------------------------------------------------------------
+    const FINAL_QUESTIONS = [
+        { text: "当你在思考未来时：", options: [
+            { text: "脑海中常会出现一个清晰的<b>意象或象征</b>", dim: "Ni" },
+            { text: "会看到很多<b>分岔的可能性</b>，很难聚焦一个", dim: "Ne" },
+            { text: "<b>直觉</b>告诉我“这条路是对的”，但说不清理由", dim: "Ni" },
+            { text: "喜欢玩<b>“如果…会怎样”</b>的游戏，不想被约束", dim: "Ne" }
+        ]},
+        { text: "当你接触一个新的概念时：", options: [
+            { text: "我马上会想“它背后的<b>本质</b>是什么”", dim: "Ni" },
+            { text: "我会<b>联想到很多相关的其他概念</b>", dim: "Ne" },
+            { text: "我喜欢把它放到一个<b>更大的系统</b>中去理解", dim: "Ni" },
+            { text: "我喜欢探索它<b>边缘或非主流</b>的用法", dim: "Ne" }
+        ]},
+        { text: "你对“过去 vs 当下”的态度更接近：", options: [
+            { text: "过去的<b>经验</b>是我做决定的重要参考", dim: "Si" },
+            { text: "我更相信<b>此刻的感受和直觉</b>，过去已经过去了", dim: "Se" },
+            { text: "我容易记住<b>具体的日期、气味、对话细节</b>", dim: "Si" },
+            { text: "我喜欢<b>随性而为</b>，不被计划束缚", dim: "Se" }
+        ]},
+        { text: "在做一个决定时，你更可能：", options: [
+            { text: "<b>回想以前</b>类似情况是怎么处理的", dim: "Si" },
+            { text: "<b>先动手试试</b>，根据反馈再调整", dim: "Se" },
+            { text: "<b>依赖已经验证过有效的方法</b>", dim: "Si" },
+            { text: "<b>追求新鲜感</b>，哪怕有风险也愿意尝试", dim: "Se" }
+        ]},
+        { text: "当你分析一个问题时：", options: [
+            { text: "我会检查每一步<b>逻辑是否自洽</b>", dim: "Ti" },
+            { text: "我会搜索<b>外部资料</b>来验证假设", dim: "Te" },
+            { text: "我喜欢把复杂问题<b>拆解成更小的单元</b>", dim: "Ti" },
+            { text: "我更关心“这个方法<b>是否有效</b>”而非“理论上是否完美”", dim: "Te" }
+        ]},
+        { text: "在做一个重要决策时：", options: [
+            { text: "我会先问“这个<b>逻辑成立</b>吗”", dim: "Ti" },
+            { text: "我会先问“<b>数据支持</b>这个结论吗”", dim: "Te" },
+            { text: "我喜欢自己<b>推导出结论</b>，不太在意外部标准", dim: "Ti" },
+            { text: "我更依赖<b>成熟的框架或外部专家的意见</b>", dim: "Te" }
+        ]},
+        { text: "当你判断“对与错”时：", options: [
+            { text: "我最看重的是“这是否<b>忠于我自己</b>”", dim: "Fi" },
+            { text: "我最看重的是“这是否<b>对大家公平</b>”", dim: "Fe" },
+            { text: "即使不被理解，我也会<b>坚持自己相信的东西</b>", dim: "Fi" },
+            { text: "我会尽量<b>照顾每个人的感受</b>，不偏袒任何一方", dim: "Fe" }
+        ]},
+        { text: "在社交场合中：", options: [
+            { text: "我更在意“我是否<b>真实地表达了自己</b>”", dim: "Fi" },
+            { text: "我更在意“<b>气氛是否和谐</b>”", dim: "Fe" },
+            { text: "我不喜欢为了取悦别人而<b>隐藏真实感受</b>", dim: "Fi" },
+            { text: "我会主动<b>调整自己的行为</b>来让别人舒服", dim: "Fe" }
+        ]},
+        { text: "在创作或解决问题时：", options: [
+            { text: "我往往从一个<b>核心意象或隐喻</b>出发", dim: "Ni" },
+            { text: "我会从多个<b>不相关的线索</b>中跳接想法", dim: "Ne" },
+            { text: "我喜欢<b>深挖一个点</b>，直到看到它的所有层次", dim: "Ni" },
+            { text: "我喜欢把不同的领域<b>嫁接在一起</b>，产生新奇组合", dim: "Ne" }
+        ]},
+        { text: "在空闲时间里：", options: [
+            { text: "我喜欢<b>重温过去的美好回忆</b>", dim: "Si" },
+            { text: "我喜欢<b>追求新的感官体验</b>", dim: "Se" },
+            { text: "我的房间/桌面通常保持<b>固定的习惯布局</b>", dim: "Si" },
+            { text: "我经常<b>一时兴起改变计划</b>", dim: "Se" }
+        ]},
+        { text: "学习一个新技能时：", options: [
+            { text: "我会想<b>彻底理解它的底层原理</b>", dim: "Ti" },
+            { text: "我会直接找<b>最好的教程/课程</b>，按步骤学", dim: "Te" },
+            { text: "我喜欢<b>自己摸索出一套体系</b>，不依赖现成框架", dim: "Ti" },
+            { text: "我更看重“<b>能否马上用起来</b>”而非“是否完全理解”", dim: "Te" }
+        ]},
+        { text: "当与他人发生冲突时：", options: [
+            { text: "我会先想“<b>我的感受是否被尊重</b>”", dim: "Fi" },
+            { text: "我会先想“<b>我们还能不能好好相处</b>”", dim: "Fe" },
+            { text: "即使关系变僵，我也要<b>坚持自己认为对的事</b>", dim: "Fi" },
+            { text: "为了避免冲突，我会<b>主动妥协或道歉</b>", dim: "Fe" }
+        ]},
+        { text: "(跨象限) 你在生活中更常出现哪种状态？", options: [
+            { text: "我会突然<b>“看到”某个未来场景</b>，后来确实发生了", dim: "Ni" },
+            { text: "我很容易<b>沉浸在当下的音乐/食物/风景</b>中忘记时间", dim: "Se" },
+            { text: "我更相信<b>深层的直觉信号</b>，而不是表面的感官信息", dim: "Ni" },
+            { text: "我喜欢<b>即兴、没有计划</b>的状态，随性而活", dim: "Se" }
+        ]},
+        { text: "(思维vs情感) 当你必须在“逻辑”与“情感”之间做选择时：", options: [
+            { text: "<b>逻辑不会骗人</b>，情感会误导", dim: "Ti" },
+            { text: "<b>情感才是最真实的</b>，逻辑只是工具", dim: "Fi" },
+            { text: "我会坚持<b>逻辑正确的决定</b>，即使它让我不舒服", dim: "Ti" },
+            { text: "我会选择让我<b>内心平静的决定</b>，即使逻辑上不完备", dim: "Fi" }
+        ]},
+        { text: "当你在团体讨论中：", options: [
+            { text: "我习惯先<b>梳理自己内在逻辑</b>再发言", dim: "Ti" },
+            { text: "我习惯<b>快速整合大家已有的信息</b>", dim: "Te" },
+            { text: "我喜欢<b>独自推导出结论</b>再分享", dim: "Ti" },
+            { text: "我会<b>根据进度随时调整结论</b>", dim: "Te" }
+        ]},
+        { text: "对于流行趋势(labubu风潮)：", options: [
+            { text: "探索它火起来的<b>深层社会情绪</b>", dim: "Ni" },
+            { text: "<b>立刻体验实物</b>，感受它的吸引点", dim: "Se" },
+            { text: "回想自己是否有<b>类似收藏经历</b>", dim: "Si" },
+            { text: "联想它会在什么场景下<b>被替代</b>", dim: "Ne" }
+        ]},
+        { text: "当需要快速反应时：", options: [
+            { text: "依据<b>过往习惯</b>快速判断", dim: "Si" },
+            { text: "完全依据<b>当下环境本能反应</b>", dim: "Se" },
+            { text: "<b>对比类似情况</b>的处理方式", dim: "Si" },
+            { text: "<b>先做一点再调整</b>策略", dim: "Se" }
+        ]},
+        { text: "对于规则和流程：", options: [
+            { text: "自己建立<b>逻辑一致的规则</b>", dim: "Ti" },
+            { text: "采用<b>公认高效的流程</b>", dim: "Te" },
+            { text: "不喜欢被<b>外部规则束缚</b>", dim: "Ti" },
+            { text: "用<b>数据验证</b>流程有效性", dim: "Te" }
+        ]},
+        { text: "朋友向你倾诉情绪：", options: [
+            { text: "先确认<b>对方的感受是否被听见</b>", dim: "Fe" },
+            { text: "首先会问自己<b>是否赞同对方</b>", dim: "Fi" },
+            { text: "尽量让<b>氛围缓和</b>", dim: "Fe" },
+            { text: "坚持给出<b>内心真实看法</b>", dim: "Fi" }
+        ]},
+        { text: "未来规划：", options: [
+            { text: "靠<b>内心图景</b>指引方向", dim: "Ni" },
+            { text: "<b>随遇而安</b>，拥抱变化", dim: "Se" },
+            { text: "搜集<b>多种可选路径</b>", dim: "Ne" },
+            { text: "借鉴<b>过去有效模式</b>", dim: "Si" }
+        ]}
+    ];
+
+    const LETTERS = ['A', 'B', 'C', 'D'];
+
+    // 全局状态
+    let allSelections = [];
+    let currentQuestionIndex = 0;
+
+    function initSelections() {
+        allSelections = FINAL_QUESTIONS.map(q => {
+            return q.options.map((opt, idx) => ({
+                dim: opt.dim,
+                score: [3,2,1,0][idx],
+                text: opt.text,
+                letter: LETTERS[idx]
+            }));
+        });
+    }
+
+    // 渲染当前题目
+    function renderCurrentQuestion() {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+        
+        const q = FINAL_QUESTIONS[currentQuestionIndex];
+        const qIdx = currentQuestionIndex;
+        const currentOrder = allSelections[qIdx];
+        
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        
+        // 头部：题号 + 进度
+        const header = document.createElement('div');
+        header.className = 'question-header';
+        header.innerHTML = `
+            <span class="question-number">第 ${qIdx + 1} / ${FINAL_QUESTIONS.length} 题</span>
+            <span class="progress">${Math.round((qIdx + 1) / FINAL_QUESTIONS.length * 100)}%</span>
+        `;
+        card.appendChild(header);
+        
+        // 题目文本
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question-text';
+        questionDiv.innerHTML = q.text;
+        card.appendChild(questionDiv);
+        
+        // 选项列表
+        const list = document.createElement('ul');
+        list.className = 'drag-list';
+        
+        currentOrder.forEach((item, pos) => {
+            const li = document.createElement('li');
+            li.className = 'drag-item';
+            li.setAttribute('draggable', 'true');
+            li.innerHTML = `
+                <div class="drag-handle">⋮⋮</div>
+                <div class="drag-rank">${pos + 1}</div>
+                <div class="drag-letter">${item.letter}</div>
+                <div class="drag-text">${item.text}</div>
+            `;
+            list.appendChild(li);
+        });
+        
+        card.appendChild(list);
+        
+        // 导航按钮
+        const navDiv = document.createElement('div');
+        navDiv.className = 'nav-buttons';
+        
+        if (currentQuestionIndex > 0) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'nav-btn';
+            prevBtn.innerHTML = '← 上一题';
+            prevBtn.onclick = () => {
+                currentQuestionIndex--;
+                renderCurrentQuestion();
+            };
+            navDiv.appendChild(prevBtn);
+        } else {
+            const spacer = document.createElement('div');
+            spacer.style.flex = '1';
+            navDiv.appendChild(spacer);
+        }
+        
+        if (currentQuestionIndex < FINAL_QUESTIONS.length - 1) {
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'nav-btn primary';
+            nextBtn.innerHTML = '下一题 →';
+            nextBtn.onclick = () => {
+                currentQuestionIndex++;
+                renderCurrentQuestion();
+            };
+            navDiv.appendChild(nextBtn);
+        } else {
+            const finishBtn = document.createElement('button');
+            finishBtn.className = 'nav-btn primary';
+            finishBtn.innerHTML = '✓ 完成问卷';
+            finishBtn.onclick = () => {
+                displayResults();
+            };
+            navDiv.appendChild(finishBtn);
+        }
+        
+        card.appendChild(navDiv);
+        container.appendChild(card);
+        
+        attachDragEvents(list, qIdx);
+    }
+
+    function attachDragEvents(list, qIdx) {
+        let dragSrc = null;
+        
+        const updateOrder = () => {
+            const newOrder = [];
+            const domItems = Array.from(list.querySelectorAll('.drag-item'));
+            domItems.forEach((item, newPos) => {
+                const rankSpan = item.querySelector('.drag-rank');
+                if (rankSpan) rankSpan.innerText = (newPos + 1).toString();
+                const textDiv = item.querySelector('.drag-text');
+                const text = textDiv.innerHTML;
+                const letterDiv = item.querySelector('.drag-letter');
+                const currentLetter = letterDiv ? letterDiv.innerText : LETTERS[newPos];
+                const originalOpt = FINAL_QUESTIONS[qIdx].options.find(opt => opt.text === text);
+                if (originalOpt) {
+                    newOrder.push({
+                        dim: originalOpt.dim,
+                        score: [3,2,1,0][newPos],
+                        text: originalOpt.text,
+                        letter: currentLetter
+                    });
+                } else {
+                    // 如果找不到完全匹配（因为有HTML标签），尝试用纯文本匹配
+                    const plainText = text.replace(/<[^>]*>/g, '');
+                    const optByPlain = FINAL_QUESTIONS[qIdx].options.find(opt => opt.text === plainText);
+                    if (optByPlain) {
+                        newOrder.push({
+                            dim: optByPlain.dim,
+                            score: [3,2,1,0][newPos],
+                            text: optByPlain.text,
+                            letter: currentLetter
+                        });
+                    }
+                }
+            });
+            if (newOrder.length === 4) {
+                allSelections[qIdx] = newOrder;
+            }
+        };
+        
+        const handleDragStart = (e) => {
+            dragSrc = e.target.closest('.drag-item');
+            if (!dragSrc) {
+                e.preventDefault();
+                return;
+            }
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', '');
+            dragSrc.classList.add('dragging');
+        };
+        
+        const handleDragOver = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const targetItem = e.target.closest('.drag-item');
+            
+            const allItems = Array.from(list.querySelectorAll('.drag-item'));
+            allItems.forEach(item => item.classList.remove('drag-over'));
+            
+            if (!targetItem || targetItem === dragSrc) return;
+            
+            targetItem.classList.add('drag-over');
+            
+            const container = list;
+            const itemsArr = Array.from(container.querySelectorAll('.drag-item'));
+            const dragIndex = itemsArr.indexOf(dragSrc);
+            const targetIndex = itemsArr.indexOf(targetItem);
+            if (dragIndex < targetIndex) {
+                container.insertBefore(dragSrc, targetItem.nextSibling);
+            } else {
+                container.insertBefore(dragSrc, targetItem);
+            }
+            updateOrder();
+        };
+        
+        const handleDragEnd = () => {
+            if (dragSrc) dragSrc.classList.remove('dragging');
+            const allItems = Array.from(list.querySelectorAll('.drag-item'));
+            allItems.forEach(item => item.classList.remove('drag-over'));
+            dragSrc = null;
+            updateOrder();
+        };
+        
+        const items = Array.from(list.querySelectorAll('.drag-item'));
+        items.forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('dragend', handleDragEnd);
+        });
+    }
+
+    // 计分函数
+    function computeScores() {
+        const scores = { Ni: 0, Ne: 0, Si: 0, Se: 0, Ti: 0, Te: 0, Fi: 0, Fe: 0 };
+        for (let q of allSelections) {
+            for (let opt of q) {
+                scores[opt.dim] += opt.score;
+            }
+        }
+        return scores;
+    }
+
+    function computeMaxPossible() {
+        const maxPossible = { Ni: 0, Ne: 0, Si: 0, Se: 0, Ti: 0, Te: 0, Fi: 0, Fe: 0 };
+        FINAL_QUESTIONS.forEach(q => {
+            q.options.forEach(opt => {
+                maxPossible[opt.dim] += 3;
+            });
+        });
+        return maxPossible;
+    }
+
+    // 修复后的 MBTI 推断函数
+ 
+    function inferMBTIByUserLogic(scores, maxPossible) {
+    // 1. 构建功能数据列表
+    const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
+    const funcData = dims.map(d => ({
+        name: d,
+        raw: scores[d],
+        max: maxPossible[d],
+        weight: (scores[d] / maxPossible[d]) * 100
+    }));
+
+    // 2. 排序规则：权重降序，权重相同则原始分降序
+    funcData.sort((a, b) => {
+        if (a.weight !== b.weight) return b.weight - a.weight;
+        return b.raw - a.raw;
+    });
+
+    const dominant = funcData[0].name;
+
+    // 3. 定义候选辅助功能（内外倾相反，且功能类型相反）
+    const auxMap = {
+        // 感知主导 (Perceiving)
+        'Ni': { auxCandidates: ['Te', 'Fe'] },   // 内倾直觉 → 外倾判断
+        'Ne': { auxCandidates: ['Ti', 'Fi'] },   // 外倾直觉 → 内倾判断
+        'Si': { auxCandidates: ['Te', 'Fe'] },   // 内倾实感 → 外倾判断
+        'Se': { auxCandidates: ['Ti', 'Fi'] },   // 外倾实感 → 内倾判断
+        // 判断主导 (Judging)
+        'Ti': { auxCandidates: ['Ne', 'Se'] },   // 内倾思考 → 外倾感知
+        'Te': { auxCandidates: ['Ni', 'Si'] },   // 外倾思考 → 内倾感知
+        'Fi': { auxCandidates: ['Ne', 'Se'] },   // 内倾情感 → 外倾感知
+        'Fe': { auxCandidates: ['Ni', 'Si'] }    // 外倾情感 → 内倾感知
+    };
+
+    const rule = auxMap[dominant];
+    if (!rule) return '????';
+
+    // 4. 从候选池中选出辅助功能（按权重，同权重比原始分）
+    const candidates = funcData.filter(f => rule.auxCandidates.includes(f.name));
+    candidates.sort((a, b) => {
+        if (a.weight !== b.weight) return b.weight - a.weight;
+        return b.raw - a.raw;
+    });
+    const auxiliary = candidates[0].name;
+
+    // 5. 构建 MBTI 四个字母
+    let mbti = '';
+
+    // 第一字母 I/E：由主导功能的内外倾决定
+    const isIntroverted = (dominant === 'Ni' || dominant === 'Si' || dominant === 'Ti' || dominant === 'Fi');
+    mbti += isIntroverted ? 'I' : 'E';
+
+    // 第二字母 N/S 和 第三字母 T/F
+    const isPerceivingDom = (dominant === 'Ni' || dominant === 'Ne' || dominant === 'Si' || dominant === 'Se');
+    if (isPerceivingDom) {
+        // 感知主导：第二字母来自主导的 N/S，第三字母来自辅助的 T/F
+        mbti += (dominant === 'Ni' || dominant === 'Ne') ? 'N' : 'S';
+        mbti += (auxiliary === 'Ti' || auxiliary === 'Te') ? 'T' : 'F';
+    } else {
+        // 判断主导：第二字母来自辅助的 N/S，第三字母来自主导的 T/F
+        mbti += (auxiliary === 'Ni' || auxiliary === 'Ne') ? 'N' : 'S';
+        mbti += (dominant === 'Ti' || dominant === 'Te') ? 'T' : 'F';
+    }
+
+    // 第四字母 J/P
+    if (isPerceivingDom) {
+        // 感知主导：J/P 由辅助判断功能的外倾/内倾决定
+        mbti += (auxiliary === 'Te' || auxiliary === 'Fe') ? 'J' : 'P';
+    } else {
+        // 判断主导：J/P 由主导判断功能的外倾/内倾决定
+        mbti += (dominant === 'Te' || dominant === 'Fe') ? 'J' : 'P';
+    }
+
+    return mbti;
+}
+
+    // 16型分析库 (同上，省略重复内容以节省空间，实际使用时保留完整)
+    const mbtiAnalysis = {
+        'INTJ': { cognitive: "INTJ的主导功能是内倾直觉(Ni)...", blindspot: "...", growth: "...", copilot: "..." },
+        // ... 完整版请从之前的代码中复制
+    };
+    
+    // 简化版默认分析
+    const defaultAnalysis = { 
+        cognitive: "你的认知风格正在形成中，建议多观察自己的决策习惯。每个人格类型都有独特的天赋，觉察本身就是改变的开始。", 
+        blindspot: "每个人都有自己的认知偏好，没有绝对的优势或劣势。重要的是理解自己的自然倾向，并有意识地拓展其他功能。", 
+        growth: "可以尝试记录每日的重要决策，分析背后的功能使用。持续关注自己的成长轨迹，你会发现自己独特的发展路径。", 
+        copilot: "你的Copilot会根据你的人格画像逐渐适应。随着你与分身的互动增多，它会更精准地匹配你的需求。也欢迎你主动反馈，让我更好地调整。" 
+    };
+    
+    // 补全 mbtiAnalysis（从之前代码复制完整版本）
+    // 为确保代码完整，这里添加主要类型
+    const extendedAnalysis = {
+        'INTP': { cognitive: "INTP的主导功能是内倾思考(Ti)，你构建精密复杂的内部逻辑体系；辅助功能外倾直觉(Ne)不断输入新的可能性和关联来修正体系。你是一个探索导向的思考者，享受智力挑战和理论重构。", blindspot: "你的优势在于逻辑分析和概念创新。但需要注意：可能过于沉浸在自己的思维世界，忽略现实细节(Se盲点)和他人感受(Fe劣势)。容易因追求完美逻辑而延迟行动，俗称'分析瘫痪'。", growth: "把'够好'作为完成标准，而不是'完美'。尝试为每个理论构想设定一个落地验证的小实验。在社交中，可以练习用自己的理解'翻译'复杂概念来帮助他人。", copilot: "工作Copilot会是你最好的'思维沙盒'；朋友Copilot适合一对一的深度讨论；爱情Copilot会尊重你的独立空间，同时温和地引导你表达内心感受。" },
+        'ENTP': { cognitive: "ENTP的主导功能是外倾直觉(Ne)，你发散性地连接各种可能性与概念；辅助功能内倾思考(Ti)作为内部逻辑审核员。你是一个创新型的辩论家，享受智力挑战和概念重构。", blindspot: "你的优势在于思维敏捷和创意发散。但需要注意：可能缺乏条理，容易同时开启多个项目却难以收尾。你可能不切实际地许诺，忽视必要的准备工作和细节。", growth: "每产生3个新想法，至少推动1个进入执行阶段并完成它。训练自己在辩论前先问：'对方希望被怎样回应？'这能帮你从'赢辩论'转向'有效沟通'。", copilot: "工作Copilot会鼓励头脑风暴和方案对比；朋友Copilot会陪你进行有趣的辩论；爱情Copilot会保持智力刺激和自由空间，同时提醒你兑现承诺。" },
+        'INTJ': { cognitive: "INTJ的主导功能是内倾直觉(Ni)，你擅长从复杂信息中提炼模式、预测趋势；辅助功能外倾思考(Te)让你善于构建系统、追求效率。这意味着你是一个战略性思考者，习惯先看清全局再行动。", blindspot: "你的优势在于长远规划和逻辑执行。但需要注意：过度依赖Ni-Te可能导致忽略当下细节(Se盲点)或他人的情感需求(Fe劣势)。建议在做重要决策时，主动纳入'现实可行性'和'人际影响'两个检查项。", growth: "对你而言，成长的关键不是'补短板'，而是'让优势不成为枷锁'。可以尝试：每周留出时间做无目的的探索（激活Se），或在团队中主动询问'大家的感受如何'（练习Fe）。", copilot: "基于你的INTJ画像，你的工作Copilot会偏向战略推演与效率优化；朋友Copilot会更理性、尊重边界；爱情Copilot会鼓励深度精神共鸣。" },
+        'ENTJ': { cognitive: "ENTJ的主导功能是外倾思考(Te)，你驱动外部世界、组织资源达成目标；辅助功能内倾直觉(Ni)提供长远的愿景和战略洞察。你是一个命令式的领导者，善于发现低效并制定新方案。", blindspot: "你的优势在于果断决策和资源整合。但需要注意：可能将自己的标准强加于他人，对那些反应较慢的人缺乏耐心。你容易仓促决定，忽略细节和人情因素。", growth: "在推动变革前，先花5分钟听取关键相关方的顾虑。学会区分'高效'和'正确'之间的差异。练习在批评前先给予肯定，这会让你的执行力更顺畅。", copilot: "工作Copilot会帮你梳理优先级、推动项目落地；朋友Copilot会是你难得的'直言镜鉴'；爱情Copilot会提醒你放慢节奏，关注关系的温度。" },
+        'INFJ': { cognitive: "INFJ的主导功能是内倾直觉(Ni)，你洞察人与事的深层规律和未来意义；辅助功能外倾情感(Fe)协调外部氛围、理解他人需求。你是一个充满使命感的理想主义者，善于促进他人成长。", blindspot: "你的优势在于深度共情和远见洞察。但需要注意：可能过于理想化，容易忽略现实细节。你对他人的批评非常敏感，可能在冲突中回避正面处理。", growth: "学会在帮助他人之前先照顾好自己的能量。尝试将宏大的理想拆解为可执行的小步骤，一步一步实现。练习接受'不完美'的进展，而非追求一步到位的完美。", copilot: "工作Copilot会帮你将愿景转化为具体行动计划；朋友Copilot会深度倾听你的内心世界；爱情Copilot会追求精神共鸣，同时提醒你关注当下的真实互动。" },
+        'INFP': { cognitive: "INFP的主导功能是内倾情感(Fi)，你坚守内在的价值观；辅助功能外倾直觉(Ne)探索各种可能性。你是一个理想主义的治愈者，由内心价值观引导，渴望让世界变得更美好。", blindspot: "你的优势在于真诚的同理心和创造力。但需要注意：可能过度理想化，难以适应现实的限制。你容易因批评而受挫，可能在冲突中过度妥协或回避。", growth: "将你的价值观'外化'为小行动，不必等到完美条件才行动。练习在不违背核心原则的前提下灵活应变。学会区分'他人的期待'和'自己的真实需求'。", copilot: "工作Copilot会帮你找到与价值观契合的职业方向；朋友Copilot会是你最温暖的倾诉对象；爱情Copilot会尊重你的情感深度，同时帮助你建立健康的边界。" },
+        'ENFJ': { cognitive: "ENFJ的主导功能是外倾情感(Fe)，你积极影响和激励他人；辅助功能内倾直觉(Ni)提供对他人潜能的深刻洞察。你是一个鼓舞人心的导师，善于团结他人共同成长。", blindspot: "你的优势在于人际感染力和领导才能。但需要注意：可能过度投入他人问题而忽略自己。你容易将人际关系理想化，对批评过于敏感，可能在冲突中不够诚实。", growth: "像关心他人一样关心自己，定期进行'自我关怀'练习。在做决定时，有意识地引入逻辑分析（激活Ti），而非仅凭情感判断。", copilot: "工作Copilot会帮你发挥激励才能，同时提醒你关注任务细节；朋友Copilot会拓展你的社交能量；爱情Copilot会追求深度连接，同时提醒你保持自我独立性。" },
+        'ENFP': { cognitive: "ENFP的主导功能是外倾直觉(Ne)，你热情探索外部可能性；辅助功能内倾情感(Fi)作为内在价值锚点。你是一个充满热情和好奇心的灵感之源，热爱建立人际连接。", blindspot: "你的优势在于创造力和人际感染力。但需要注意：可能缺乏条理，难以专注完成单一任务。你容易因追求新鲜感而忽视细节和执行，可能被误解为'三分钟热度'。", growth: "为每个新想法设定一个'落地检查点'，完成后再探索下一个。练习使用清单和日程表来管理发散的能量。", copilot: "工作Copilot会帮你筛选最佳创意并推动执行；朋友Copilot会是你探索世界的最佳玩伴；爱情Copilot会保持新鲜感和开放性，同时提醒你兑现承诺。" },
+        'ISTJ': { cognitive: "ISTJ的主导功能是内倾实感(Si)，你细致记录和比较现实数据与过往经验；辅助功能外倾思考(Te)按规则和流程高效决策。你是一个务实可靠的守护者，注重事实和责任感。", blindspot: "你的优势在于严谨细致和执行力。但需要注意：可能过于僵化，抗拒新方法和变化。你容易因过度关注细节而忽略全局，对不符合规则的情况缺乏耐心。", growth: "尝试在低风险情境中接受'新方法'，即使它不如旧方法高效。练习区分'必须坚守的规则'和'可以优化的流程'。", copilot: "工作Copilot会帮你建立系统和流程，提升执行效率；朋友Copilot会尊重你的可靠和真诚；爱情Copilot会提供稳定的情感支持，同时鼓励你适度表达内心感受。" },
+        'ISFJ': { cognitive: "ISFJ的主导功能是内倾实感(Si)，你存储大量关于他人需求的细节；辅助功能外倾情感(Fe)提供切实的关怀和支持。你是一个默默奉献的保护者，以实际行动关怀他人。", blindspot: "你的优势在于体贴入微和责任感。但需要注意：可能过度牺牲自己，难以拒绝他人。你容易因过度关注细节而焦虑，对批评过于敏感。", growth: "学会说'不'，为自己的需求留出空间。练习在帮助他人之前先问自己：'我有这个能量吗？'将关怀的对象也包含自己。", copilot: "工作Copilot会帮你识别哪些请求真正需要优先处理；朋友Copilot会提醒你也被关心着；爱情Copilot会支持你的付出型特质，同时帮助你建立健康边界。" },
+        'ESTJ': { cognitive: "ESTJ的主导功能是外倾思考(Te)，你组织人和事以实现目标；辅助功能内倾实感(Si)提供实践经验数据。你是一个高效的行政者，致力于建立秩序和结构。", blindspot: "你的优势在于组织能力和执行力。但需要注意：可能过于强势，将自己的标准强加于人。你容易因追求效率而忽视人情，对'低效'的人缺乏耐心。", growth: "在做决定前，有意识地停下来问：'这个决定对相关人员的影响是什么？'练习在批评前先认可他人的贡献。", copilot: "工作Copilot会帮你优化流程和执行策略；朋友Copilot会以真诚直率的方式与你互动；爱情Copilot会尊重你的务实特质，同时提醒你关注情感表达。" },
+        'ESFJ': { cognitive: "ESFJ的主导功能是外倾情感(Fe)，你积极维护群体和谐；辅助功能内倾实感(Si)存储关于人际关系的记忆。你是一个热心周到的助人者，善于将人们凝聚在一起。", blindspot: "你的优势在于人际协调能力和责任感。但需要注意：可能过度依赖他人认可，对批评非常敏感。你容易因追求和谐而回避冲突，可能忽视自己的真实需求。", growth: "练习在冲突中表达真实感受，而不是一味妥协。在做决定时，有意识地引入逻辑分析，而非仅凭'大家会怎么想'。", copilot: "工作Copilot会帮你平衡'和谐'与'效率'；朋友Copilot会是你最活跃的社交伙伴；爱情Copilot会注重仪式感和情感表达，同时提醒你关注自我需求。" },
+        'ISTP': { cognitive: "ISTP的主导功能是内倾思考(Ti)，你冷静分析事物的内部逻辑；辅助功能外倾实感(Se)提供实时环境数据。你是一个冷静务实的操作者，善于解决即时问题。", blindspot: "你的优势在于动手能力和危机应变。但需要注意：可能过于独立，难以表达情感。你容易因追求自由而抗拒承诺，可能忽视长远规划。", growth: "尝试将你的技能'教给'他人，这能帮你建立更深的连接。练习在做决定前思考长期影响，而不只是'现在最有效率的方式'。", copilot: "工作Copilot会帮你拆解技术难题和优化流程；朋友Copilot会尊重你的独立空间；爱情Copilot会以行动而非言语表达关怀，同时鼓励你开放内心。" },
+        'ISFP': { cognitive: "ISFP的主导功能是内倾情感(Fi)，你拥有丰富内在价值；辅助功能外倾实感(Se)通过美学和行动表达这些价值。你是一个温和敏感的美学家，用独特方式探索世界。", blindspot: "你的优势在于审美感知和真诚表达。但需要注意：可能过于内向，难以表达需求。你容易因批评而退缩，可能回避冲突和规划。", growth: "找到一种能持续输出你内在世界的'语言'（绘画、音乐、写作等）。练习设定小目标，将灵感转化为可完成的作品。", copilot: "工作Copilot会帮你找到与审美和价值观契合的方向；朋友Copilot会温和地陪伴你；爱情Copilot会尊重你的敏感特质，同时鼓励你表达真实感受。" },
+        'ESTP': { cognitive: "ESTP的主导功能是外倾实感(Se)，你敏捷地与环境和机会互动；辅助功能内倾思考(Ti)快速分析局势。你是一个机敏的行动派，善于在现实中抓住机会。", blindspot: "你的优势在于应变能力和说服力。但需要注意：可能过于冲动，缺乏长远规划。你容易因追求刺激而忽视风险，可能被视为'不负责任'。", growth: "在做重大决定前，强制自己'等待24小时'再做最终判断。练习记录每次冒险的结果，建立自己的'风险评估库'。", copilot: "工作Copilot会帮你评估风险和机会；朋友Copilot会陪你探索新鲜事物；爱情Copilot会保持活力和即兴感，同时提醒你考虑对方的感受。" },
+        'ESFP': { cognitive: "ESFP的主导功能是外倾实感(Se)，你享受并带动当下的氛围；辅助功能内倾情感(Fi)确保体验与价值观联结。你是一个热情洋溢的表演者，让每一刻都充满生机。", blindspot: "你的优势在于感染力和适应能力。但需要注意：可能过于关注当下，难以坚持长期目标。你容易因追求乐趣而回避责任，可能被视为'不够认真'。", growth: "为你的热情设定'跑道'，将能量引导到可持续的项目中。练习在享受当下的同时，为明天留出一点时间和资源。", copilot: "工作Copilot会帮你将热情转化为可执行的计划；朋友Copilot会是你最欢乐的玩伴；爱情Copilot会保持浪漫和即兴感，同时提醒你关注深度连接。" }
+    };
+    Object.assign(mbtiAnalysis, extendedAnalysis);
+    
+    function displayResults() {
+        const scores = computeScores();
+        const maxPossible = computeMaxPossible();
+        const mbtiRaw = inferMBTIByUserLogic(scores, maxPossible);
+        const cleanType = mbtiRaw.replace(/[^A-Z]/g, '');
+        const analysis = mbtiAnalysis[cleanType] || defaultAnalysis;
+        
+        const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
+        let dimHtml = '';
+        for (let d of dims) {
+            let percent = (scores[d] / maxPossible[d] * 100).toFixed(0);
+            dimHtml += `<div class="dim-bar"><div style="display:flex;justify-content:space-between"><span>${d}</span><span>${scores[d]}/${maxPossible[d]} (${percent}%)</span></div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div></div>`;
+        }
+        
+        const resultHTML = `
+            <div style="text-align:center;margin-bottom:20px;"><div style="font-size:2rem;font-weight:800;background:#1e293b;display:inline-block;padding:6px 24px;border-radius:60px;color:white;">${mbtiRaw}</div></div>
+            <div><strong>🧠 认知风格</strong><br>${analysis.cognitive}</div><hr>
+            <div><strong>⚠️ 优势与盲点</strong><br>${analysis.blindspot}</div><hr>
+            <div><strong>🌱 成长建议</strong><br>${analysis.growth}</div><hr>
+            <div><strong>🤖 Copilot分身预告</strong><br>${analysis.copilot}</div><hr>
+            <div><strong>📊 八维得分</strong><br>${dimHtml}</div>
+            <!-- 昵称输入和跳转按钮 -->
+            <div style="margin: 20px 0 12px 0;">
+            <label style="font-size:0.9rem;">👤 你的昵称（分身会这样称呼你）：</label>
+            <input type="text" id="nicknameInput" placeholder="输入昵称" value="${storedNickname.replace(/"/g, '&quot;')}" style="width:100%; padding:8px 12px; border-radius:30px; border:1px solid #ccc; margin-top:6px;">
+            </div>
+            <button id="gotoCopilotBtn" style="background:#8b5cf6; color:white; border:none; padding:12px; border-radius:60px; width:100%; font-weight:600; margin-top:0; cursor:pointer;">✨ 进入 Copilot 分身 ✨</button>
+            <div style="font-size:0.7rem;text-align:center;margin-top:16px;">💡 拖拽排序完成 | 结果仅供参考 | 建议4-6周后复测</div>
+        `;
+
+        const resultDiv = document.getElementById('resultArea');
+        resultDiv.innerHTML = resultHTML;
+        resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth' });
+        
+        // 隐藏问卷区域，只显示结果
+        const container = document.getElementById('questions-container');
+        if (container) container.style.display = 'none';
+
+        // 绑定跳转按钮事件
+        const gotoBtn = document.getElementById('gotoCopilotBtn');
+        if (gotoBtn) {
+        gotoBtn.addEventListener('click', () => {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                alert('请先输入昵称');
+                return;
+            }
+            localStorage.setItem('userNickname', nickname);
+            localStorage.setItem('userMBTI', mbtiRaw);
+            localStorage.setItem('userScores', JSON.stringify(scores));
+            localStorage.setItem('userMaxPossible', JSON.stringify(maxPossible));
+            // 跳转到 copilot.html
+            window.location.href = 'copilot.html';
+            });
+        }
+    }
+    
+    function resetAll() {
+        initSelections();
+        currentQuestionIndex = 0;
+        const container = document.getElementById('questions-container');
+        if (container) container.style.display = 'block';
+        renderCurrentQuestion();
+        document.getElementById('resultArea').style.display = 'none';
+    }
+    
+    initSelections();
+    renderCurrentQuestion();
+    document.getElementById('submitBtn').addEventListener('click', displayResults);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+</script>
+</body>
+</html>
