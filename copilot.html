@@ -222,6 +222,14 @@
 <footer>✨ AI 分身基于你的 MBTI 人格模型 | 对话仅保存在本地</footer>
 
 <script>
+     // --- 入场安检：检查是否有测试结果 ---
+  const userMBTI = localStorage.getItem('userMBTI');
+  const userScores = localStorage.getItem('userScores');
+
+  // 如果没有找到测试结果，立即跳转到问卷页面
+  if (!userMBTI || !userScores) {
+    window.location.href = 'index.html';
+  }
     // ---------- 初始化用户数据 ----------
     let userNickname = localStorage.getItem('userNickname') || '朋友';
     let userMBTI = localStorage.getItem('userMBTI') || 'ENFP';
