@@ -224,9 +224,20 @@
 <script>
      // --- 入场安检：检查是否有测试结果 ---
   // 入场安检：检查是否有测试结果
-    if (!localStorage.getItem('userMBTI') || !localStorage.getItem('userScores')) {
+    const storedMBTI = localStorage.getItem('userMBTI');
+    const storedScores = localStorage.getItem('userScores');
+
+    // 调试：在控制台打印出存储的内容（部署后记得删除）
+    console.log('userMBTI:', storedMBTI);
+    console.log('userScores:', storedScores);
+
+// 如果缺少必要数据，跳转到问卷页面
+    if (!storedMBTI || !storedScores || storedScores === 'undefined' || storedScores === 'null') {
+        console.warn('未找到有效的人格数据，跳转到问卷页面');
         window.location.href = 'index.html';
+    // 注意：跳转后下面的代码不会执行，所以不需要 else
     }
+    
     // ---------- 初始化用户数据 ----------
     let userNickname = localStorage.getItem('userNickname') || '朋友';
     let userMBTI = localStorage.getItem('userMBTI') || 'ENFP';

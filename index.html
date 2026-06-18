@@ -241,6 +241,7 @@
             .question-text { font-size: 1rem; }
         }
     </style>
+    <script src="questions.js"></script>
 </head>
 <body>
 <div class="container">
@@ -266,134 +267,38 @@
     // 双测版题库 (20题，带关键词加粗标记)
     // 使用 <b>关键词</b> 来增强可读性
     // --------------------------------------------------------------
-    const FINAL_QUESTIONS = [
-        { text: "当你在思考未来时：", options: [
-            { text: "脑海中常会出现一个清晰的<b>意象或象征</b>", dim: "Ni" },
-            { text: "会看到很多<b>分岔的可能性</b>，很难聚焦一个", dim: "Ne" },
-            { text: "<b>直觉</b>告诉我“这条路是对的”，但说不清理由", dim: "Ni" },
-            { text: "喜欢玩<b>“如果…会怎样”</b>的游戏，不想被约束", dim: "Ne" }
-        ]},
-        { text: "当你接触一个新的概念时：", options: [
-            { text: "我马上会想“它背后的<b>本质</b>是什么”", dim: "Ni" },
-            { text: "我会<b>联想到很多相关的其他概念</b>", dim: "Ne" },
-            { text: "我喜欢把它放到一个<b>更大的系统</b>中去理解", dim: "Ni" },
-            { text: "我喜欢探索它<b>边缘或非主流</b>的用法", dim: "Ne" }
-        ]},
-        { text: "你对“过去 vs 当下”的态度更接近：", options: [
-            { text: "过去的<b>经验</b>是我做决定的重要参考", dim: "Si" },
-            { text: "我更相信<b>此刻的感受和直觉</b>，过去已经过去了", dim: "Se" },
-            { text: "我容易记住<b>具体的日期、气味、对话细节</b>", dim: "Si" },
-            { text: "我喜欢<b>随性而为</b>，不被计划束缚", dim: "Se" }
-        ]},
-        { text: "在做一个决定时，你更可能：", options: [
-            { text: "<b>回想以前</b>类似情况是怎么处理的", dim: "Si" },
-            { text: "<b>先动手试试</b>，根据反馈再调整", dim: "Se" },
-            { text: "<b>依赖已经验证过有效的方法</b>", dim: "Si" },
-            { text: "<b>追求新鲜感</b>，哪怕有风险也愿意尝试", dim: "Se" }
-        ]},
-        { text: "当你分析一个问题时：", options: [
-            { text: "我会检查每一步<b>逻辑是否自洽</b>", dim: "Ti" },
-            { text: "我会搜索<b>外部资料</b>来验证假设", dim: "Te" },
-            { text: "我喜欢把复杂问题<b>拆解成更小的单元</b>", dim: "Ti" },
-            { text: "我更关心“这个方法<b>是否有效</b>”而非“理论上是否完美”", dim: "Te" }
-        ]},
-        { text: "在做一个重要决策时：", options: [
-            { text: "我会先问“这个<b>逻辑成立</b>吗”", dim: "Ti" },
-            { text: "我会先问“<b>数据支持</b>这个结论吗”", dim: "Te" },
-            { text: "我喜欢自己<b>推导出结论</b>，不太在意外部标准", dim: "Ti" },
-            { text: "我更依赖<b>成熟的框架或外部专家的意见</b>", dim: "Te" }
-        ]},
-        { text: "当你判断“对与错”时：", options: [
-            { text: "我最看重的是“这是否<b>忠于我自己</b>”", dim: "Fi" },
-            { text: "我最看重的是“这是否<b>对大家公平</b>”", dim: "Fe" },
-            { text: "即使不被理解，我也会<b>坚持自己相信的东西</b>", dim: "Fi" },
-            { text: "我会尽量<b>照顾每个人的感受</b>，不偏袒任何一方", dim: "Fe" }
-        ]},
-        { text: "在社交场合中：", options: [
-            { text: "我更在意“我是否<b>真实地表达了自己</b>”", dim: "Fi" },
-            { text: "我更在意“<b>气氛是否和谐</b>”", dim: "Fe" },
-            { text: "我不喜欢为了取悦别人而<b>隐藏真实感受</b>", dim: "Fi" },
-            { text: "我会主动<b>调整自己的行为</b>来让别人舒服", dim: "Fe" }
-        ]},
-        { text: "在创作或解决问题时：", options: [
-            { text: "我往往从一个<b>核心意象或隐喻</b>出发", dim: "Ni" },
-            { text: "我会从多个<b>不相关的线索</b>中跳接想法", dim: "Ne" },
-            { text: "我喜欢<b>深挖一个点</b>，直到看到它的所有层次", dim: "Ni" },
-            { text: "我喜欢把不同的领域<b>嫁接在一起</b>，产生新奇组合", dim: "Ne" }
-        ]},
-        { text: "在空闲时间里：", options: [
-            { text: "我喜欢<b>重温过去的美好回忆</b>", dim: "Si" },
-            { text: "我喜欢<b>追求新的感官体验</b>", dim: "Se" },
-            { text: "我的房间/桌面通常保持<b>固定的习惯布局</b>", dim: "Si" },
-            { text: "我经常<b>一时兴起改变计划</b>", dim: "Se" }
-        ]},
-        { text: "学习一个新技能时：", options: [
-            { text: "我会想<b>彻底理解它的底层原理</b>", dim: "Ti" },
-            { text: "我会直接找<b>最好的教程/课程</b>，按步骤学", dim: "Te" },
-            { text: "我喜欢<b>自己摸索出一套体系</b>，不依赖现成框架", dim: "Ti" },
-            { text: "我更看重“<b>能否马上用起来</b>”而非“是否完全理解”", dim: "Te" }
-        ]},
-        { text: "当与他人发生冲突时：", options: [
-            { text: "我会先想“<b>我的感受是否被尊重</b>”", dim: "Fi" },
-            { text: "我会先想“<b>我们还能不能好好相处</b>”", dim: "Fe" },
-            { text: "即使关系变僵，我也要<b>坚持自己认为对的事</b>", dim: "Fi" },
-            { text: "为了避免冲突，我会<b>主动妥协或道歉</b>", dim: "Fe" }
-        ]},
-        { text: "(跨象限) 你在生活中更常出现哪种状态？", options: [
-            { text: "我会突然<b>“看到”某个未来场景</b>，后来确实发生了", dim: "Ni" },
-            { text: "我很容易<b>沉浸在当下的音乐/食物/风景</b>中忘记时间", dim: "Se" },
-            { text: "我更相信<b>深层的直觉信号</b>，而不是表面的感官信息", dim: "Ni" },
-            { text: "我喜欢<b>即兴、没有计划</b>的状态，随性而活", dim: "Se" }
-        ]},
-        { text: "(思维vs情感) 当你必须在“逻辑”与“情感”之间做选择时：", options: [
-            { text: "<b>逻辑不会骗人</b>，情感会误导", dim: "Ti" },
-            { text: "<b>情感才是最真实的</b>，逻辑只是工具", dim: "Fi" },
-            { text: "我会坚持<b>逻辑正确的决定</b>，即使它让我不舒服", dim: "Ti" },
-            { text: "我会选择让我<b>内心平静的决定</b>，即使逻辑上不完备", dim: "Fi" }
-        ]},
-        { text: "当你在团体讨论中：", options: [
-            { text: "我习惯先<b>梳理自己内在逻辑</b>再发言", dim: "Ti" },
-            { text: "我习惯<b>快速整合大家已有的信息</b>", dim: "Te" },
-            { text: "我喜欢<b>独自推导出结论</b>再分享", dim: "Ti" },
-            { text: "我会<b>根据进度随时调整结论</b>", dim: "Te" }
-        ]},
-        { text: "对于流行趋势(labubu风潮)：", options: [
-            { text: "探索它火起来的<b>深层社会情绪</b>", dim: "Ni" },
-            { text: "<b>立刻体验实物</b>，感受它的吸引点", dim: "Se" },
-            { text: "回想自己是否有<b>类似收藏经历</b>", dim: "Si" },
-            { text: "联想它会在什么场景下<b>被替代</b>", dim: "Ne" }
-        ]},
-        { text: "当需要快速反应时：", options: [
-            { text: "依据<b>过往习惯</b>快速判断", dim: "Si" },
-            { text: "完全依据<b>当下环境本能反应</b>", dim: "Se" },
-            { text: "<b>对比类似情况</b>的处理方式", dim: "Si" },
-            { text: "<b>先做一点再调整</b>策略", dim: "Se" }
-        ]},
-        { text: "对于规则和流程：", options: [
-            { text: "自己建立<b>逻辑一致的规则</b>", dim: "Ti" },
-            { text: "采用<b>公认高效的流程</b>", dim: "Te" },
-            { text: "不喜欢被<b>外部规则束缚</b>", dim: "Ti" },
-            { text: "用<b>数据验证</b>流程有效性", dim: "Te" }
-        ]},
-        { text: "朋友向你倾诉情绪：", options: [
-            { text: "先确认<b>对方的感受是否被听见</b>", dim: "Fe" },
-            { text: "首先会问自己<b>是否赞同对方</b>", dim: "Fi" },
-            { text: "尽量让<b>氛围缓和</b>", dim: "Fe" },
-            { text: "坚持给出<b>内心真实看法</b>", dim: "Fi" }
-        ]},
-        { text: "未来规划：", options: [
-            { text: "靠<b>内心图景</b>指引方向", dim: "Ni" },
-            { text: "<b>随遇而安</b>，拥抱变化", dim: "Se" },
-            { text: "搜集<b>多种可选路径</b>", dim: "Ne" },
-            { text: "借鉴<b>过去有效模式</b>", dim: "Si" }
-        ]}
-    ];
 
     const LETTERS = ['A', 'B', 'C', 'D'];
 
     // 全局状态
     let allSelections = [];
     let currentQuestionIndex = 0;
+    let FINAL_QUESTIONS = [];
+
+    // 从母题库中随机抽取 count 道题
+    function getRandomQuestions(questionsArray, count) {
+        if (count > questionsArray.length) {
+            console.warn(`抽取数量 ${count} 超过题库大小 ${questionsArray.length}，返回全部题库`);
+            return [...questionsArray];
+        }
+        const shuffled = [...questionsArray];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.slice(0, count);
+    }
+
+// 初始化题库：从 MASTER_QUESTIONS 中随机抽取20题
+    function initQuestions() {
+        if (typeof MASTER_QUESTIONS === 'undefined') {
+            console.error('题库未加载！请检查 questions.js 是否存在');
+            FINAL_QUESTIONS = [];
+            return;
+        }
+        FINAL_QUESTIONS = getRandomQuestions(MASTER_QUESTIONS, 20);
+        console.log("本次抽题完成，题目数:", FINAL_QUESTIONS.length);
+    }
 
     function initSelections() {
         allSelections = FINAL_QUESTIONS.map(q => {
@@ -778,6 +683,14 @@
             localStorage.setItem('userMBTI', mbtiRaw);
             localStorage.setItem('userScores', JSON.stringify(scores));
             localStorage.setItem('userMaxPossible', JSON.stringify(maxPossible));
+            
+            console.log('保存数据:', {
+                nickname,
+                mbti: mbtiRaw,
+                scores,
+                maxPossible
+            });
+            
             // 跳转到 copilot.html
             window.location.href = 'copilot.html';
         });
@@ -793,8 +706,10 @@
         document.getElementById('resultArea').style.display = 'none';
     }
     
+    initQuestions();
     initSelections();
     renderCurrentQuestion();
+    
     document.getElementById('submitBtn').addEventListener('click', displayResults);
     document.getElementById('resetBtn').addEventListener('click', resetAll);
 </script>
