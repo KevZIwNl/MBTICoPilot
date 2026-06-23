@@ -173,7 +173,18 @@
         }
     </style>
     <!-- 引入 Supabase JS 客户端 -->
+    <!-- 引入 Supabase JS 客户端（CDN 方式） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // 初始化 Supabase 客户端
+        const SUPABASE_URL = 'https://ylfirbefrapogvbrupfb.supabase.co';  // 替换为你的 Project URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZmlyYmVmcmFwb2d2YnJ1cGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTk2NzAsImV4cCI6MjA5NzU5NTY3MH0.QHD6YxuB7Z3pN5x8j3e3uUmjh6BOsVZORA4sKkmMrKY';                // 替换为你的 anon public key
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        console.log('Supabase 已初始化！');
+    </script>
 </head>
 <body>
 <div class="top-bar">
@@ -224,53 +235,235 @@
 <footer>✨ AI 分身基于你的 MBTI 人格模型 | 对话仅保存在本地</footer>
 
 <script>
-     // --- 入场安检：检查是否有测试结果 ---
-  // 入场安检：检查是否有测试结果
-    const storedMBTI = localStorage.getItem('userMBTI');
-    const storedScores = localStorage.getItem('userScores');
 
-    // 调试：在控制台打印出存储的内容（部署后记得删除）
-    console.log('userMBTI:', storedMBTI);
-    console.log('userScores:', storedScores);
+    // ============================================================
+    // 2. 全局变量（不再从 localStorage 读取）
+    // ============================================================
+    let userNickname = '朋友';
+    let userMBTI = 'ENFP';
+    let userScores = {};
+    let maxPossible = {};
+    let currentSession = null;
+    let currentMessages = [];
 
-// 如果缺少必要数据，跳转到问卷页面
-    if (!storedMBTI || !storedScores || storedScores === 'undefined' || storedScores === 'null') {
-        console.warn('未找到有效的人格数据，跳转到问卷页面');
-        window.location.href = 'index.html';
-    // 注意：跳转后下面的代码不会执行，所以不需要 else
-    }
-    
-    // ---------- 初始化用户数据 ----------
-    let userNickname = localStorage.getItem('userNickname') || '朋友';
-    let userMBTI = localStorage.getItem('userMBTI') || 'ENFP';
-    let userScores = JSON.parse(localStorage.getItem('userScores') || '{}');
-    let maxPossible = JSON.parse(localStorage.getItem('userMaxPossible') || '{}');
-    
-    // 更新顶部显示
-    document.getElementById('userDisplayName').innerText = userNickname;
-    document.getElementById('userMBTIDisplay').innerText = userMBTI;
-    
-    // 昵称修改
-    document.getElementById('editNicknameBtn').addEventListener('click', () => {
-        const newName = prompt('输入你的昵称', userNickname);
-        if (newName && newName.trim()) {
-            userNickname = newName.trim();
-            localStorage.setItem('userNickname', userNickname);
+    // 分身配置
+    const sessionNames = {
+        personal: '个人成长',
+        friend: '朋友陪伴',
+        work: '工作效能',
+        love: '恋爱亲密'
+    };
+
+    // ============================================================
+    // 3. 【新增】从 Supabase 加载用户数据（替代 localStorage 读取）
+    // ============================================================
+    async function loadUserData() {
+        try {
+            // 3.1 获取当前登录用户
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) {
+                console.warn('未登录，跳转到问卷页');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 3.2 从 users 表读取昵称和 MBTI
+            const { data: userData, error: profileError } = await supabase
+                .from('users')
+                .select('nickname, mbti_type')
+                .eq('id', user.id)
+                .single();
+
+            if (!profileError && userData) {
+                userNickname = userData.nickname || '朋友';
+                userMBTI = userData.mbti_type || 'ENFP';
+            }
+
+            // 3.3 从 assessments 表读取最新的八维分数和 maxPossible
+            const { data: assessData, error: assessError } = await supabase
+                .from('assessments')
+                .select('eight_dim_scores, max_possible_scores')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (!assessError && assessData) {
+                userScores = assessData.eight_dim_scores || {};
+                maxPossible = assessData.max_possible_scores || {};
+            } else {
+                // 没有测评记录，跳回问卷页
+                console.warn('未找到测评记录，跳转到问卷页');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 3.4 更新顶部界面
             document.getElementById('userDisplayName').innerText = userNickname;
+            document.getElementById('userMBTIDisplay').innerText = userMBTI;
+
+            console.log('✅ 用户数据加载成功', { userNickname, userMBTI, userScores, maxPossible });
+
+        } catch (err) {
+            console.error('加载用户数据失败:', err);
+            alert('数据加载失败，请刷新重试');
+        }
+    }
+
+    // ============================================================
+    // 4. 【替换】昵称修改 → 更新到 Supabase
+    // ============================================================
+    document.getElementById('editNicknameBtn').addEventListener('click', async () => {
+        const newName = prompt('输入你的昵称', userNickname);
+        if (!newName || !newName.trim()) return;
+
+        const trimmed = newName.trim();
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('未登录');
+
+            const { error } = await supabase
+                .from('users')
+                .update({ nickname: trimmed })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            userNickname = trimmed;
+            document.getElementById('userDisplayName').innerText = userNickname;
+            console.log('✅ 昵称已更新');
+        } catch (err) {
+            console.error('昵称更新失败:', err);
+            alert('昵称更新失败，请重试');
         }
     });
-    
-    // 四个分身配置
-    const sessions = ['personal', 'friend', 'work', 'love'];
-    const sessionNames = { personal: '个人成长', friend: '朋友陪伴', work: '工作效能', love: '恋爱亲密' };
-    // 每个分身的系统提示词模板（动态插入 MBTI 和昵称）
+
+    // ============================================================
+    // 5. 【替换】对话记录：从 Supabase 读取
+    // ============================================================
+    async function loadMessages(sessionType) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return [];
+
+            const { data, error } = await supabase
+                .from('copilot_sessions')
+                .select('history')
+                .eq('user_id', user.id)
+                .eq('persona_type', sessionType)
+                .maybeSingle();
+
+            if (error) {
+                console.warn('读取对话失败:', error);
+                return getDefaultWelcome(sessionType);
+            }
+
+            if (data && data.history && data.history.length > 0) {
+                return data.history;
+            }
+            return getDefaultWelcome(sessionType);
+
+        } catch (err) {
+            console.error('加载对话失败:', err);
+            return getDefaultWelcome(sessionType);
+        }
+    }
+
+    function getDefaultWelcome(sessionType) {
+        return [{
+            role: 'assistant',
+            content: `你好，${userNickname}！我是你的${sessionNames[sessionType]}分身。根据你的${userMBTI}人格，我们可以聊聊什么？`
+        }];
+    }
+
+    // ============================================================
+    // 6. 【替换】对话记录：保存到 Supabase
+    // ============================================================
+    async function saveMessages(sessionType, messages) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const toStore = messages.slice(-50); // 只保留最近50条
+
+            const { error } = await supabase
+                .from('copilot_sessions')
+                .upsert({
+                    user_id: user.id,
+                    persona_type: sessionType,
+                    history: toStore,
+                    message_count: toStore.length,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id, persona_type' });
+
+            if (error) throw error;
+            console.log(`✅ ${sessionType} 对话已保存`);
+        } catch (err) {
+            console.error('保存对话失败:', err);
+        }
+    }
+
+    // ============================================================
+    // 7. 【替换】清空对话
+    // ============================================================
+    async function clearSessionHistory(sessionType) {
+        const welcome = getDefaultWelcome(sessionType);
+        await saveMessages(sessionType, welcome);
+        if (currentSession === sessionType) {
+            currentMessages = welcome;
+            renderMessages();
+        }
+    }
+
+    // ============================================================
+    // 8. 界面切换函数（改为 async，因为要 await 加载）
+    // ============================================================
+    function showBubbles() {
+        document.getElementById('bubblesView').style.display = 'grid';
+        document.getElementById('chatView').style.display = 'none';
+        currentSession = null;
+    }
+
+    async function showChat(sessionType) {
+        document.getElementById('bubblesView').style.display = 'none';
+        document.getElementById('chatView').style.display = 'flex';
+        currentSession = sessionType;
+        document.getElementById('chatTitle').innerText = sessionNames[sessionType];
+
+        // ✅ 从 Supabase 加载对话
+        currentMessages = await loadMessages(sessionType);
+        renderMessages();
+        scrollToBottom();
+    }
+
+    function renderMessages() {
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '';
+        for (let msg of currentMessages) {
+            const div = document.createElement('div');
+            div.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
+            div.innerText = msg.content;
+            container.appendChild(div);
+        }
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('messagesContainer');
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 50);
+    }
+
+    // ============================================================
+    // 9. 系统提示词生成（不变，但依赖的变量已从云端加载）
+    // ============================================================
     function getSystemPrompt(sessionType) {
         const nickname = userNickname;
         const mbti = userMBTI;
-        // 从八维分数中提取优势功能（简略）
         let strengths = '';
         if (userScores && maxPossible) {
-            const dims = ['Ni','Ne','Si','Se','Ti','Te','Fi','Fe'];
+            const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
             let maxDim = { name: '', weight: 0 };
             for (let d of dims) {
                 let w = (userScores[d] / maxPossible[d]) * 100;
@@ -290,150 +483,91 @@
         }
         return base;
     }
-    
-    // ---------- 本地存储管理 ----------
-    function loadMessages(sessionType) {
-        const key = `chat_${sessionType}`;
-        const stored = localStorage.getItem(key);
-        if (stored) {
-            return JSON.parse(stored);
-        }
-        // 初始化一条欢迎消息
-        const welcomeMsg = { role: 'assistant', content: `你好，${userNickname}！我是你的${sessionNames[sessionType]}分身。根据你的${userMBTI}人格，我们可以聊聊什么？` };
-        return [welcomeMsg];
-    }
-    
-    function saveMessages(sessionType, messages) {
-        const key = `chat_${sessionType}`;
-        // 限制存储最近50条（避免过大）
-        const toStore = messages.slice(-50);
-        localStorage.setItem(key, JSON.stringify(toStore));
-    }
-    
-    // 清空某个分身的对话
-    function clearSessionHistory(sessionType) {
-        const welcomeMsg = { role: 'assistant', content: `你好，${userNickname}！我是你的${sessionNames[sessionType]}分身。根据你的${userMBTI}人格，我们可以聊聊什么？` };
-        saveMessages(sessionType, [welcomeMsg]);
-        if (currentSession === sessionType) {
-            renderMessages();
-        }
-    }
-    
-    // ---------- 界面切换 ----------
-    let currentSession = null;
-    let currentMessages = [];
-    
-    function showBubbles() {
-        document.getElementById('bubblesView').style.display = 'grid';
-        document.getElementById('chatView').style.display = 'none';
-        currentSession = null;
-    }
-    
-    function showChat(sessionType) {
-        document.getElementById('bubblesView').style.display = 'none';
-        document.getElementById('chatView').style.display = 'flex';
-        currentSession = sessionType;
-        document.getElementById('chatTitle').innerText = sessionNames[sessionType];
-        // 加载消息
-        currentMessages = loadMessages(sessionType);
-        renderMessages();
-        // 滚动到底部
-        scrollToBottom();
-    }
-    
-    function renderMessages() {
-        const container = document.getElementById('messagesContainer');
-        container.innerHTML = '';
-        for (let msg of currentMessages) {
-            const div = document.createElement('div');
-            div.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
-            div.innerText = msg.content;
-            container.appendChild(div);
-        }
-        scrollToBottom();
-    }
-    
-    function scrollToBottom() {
-        const container = document.getElementById('messagesContainer');
-        setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-        }, 50);
-    }
-    
-    // ---------- 发送消息并调用 API ----------
+
+    // ============================================================
+    // 10. 发送消息（修改为 await 保存到 Supabase）
+    // ============================================================
     let isWaiting = false;
+
     async function sendMessage() {
         if (isWaiting) return;
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
-        
+
         // 添加用户消息
         currentMessages.push({ role: 'user', content: text });
-        saveMessages(currentSession, currentMessages);
+        await saveMessages(currentSession, currentMessages);
         renderMessages();
-        
+
         isWaiting = true;
-        // 显示“正在输入”
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing';
         typingDiv.innerText = 'AI 正在思考...';
         document.getElementById('messagesContainer').appendChild(typingDiv);
         scrollToBottom();
-        
+
         try {
-            // 构建发送给后端的数据
             const systemPrompt = getSystemPrompt(currentSession);
-            // 只发送最近10条作为上下文（节省token）
             const history = currentMessages.slice(-10).map(m => ({ role: m.role, content: m.content }));
+
             const response = await fetch('/.netlify/functions/deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    systemPrompt: systemPrompt,
-                    messages: history
-                })
+                body: JSON.stringify({ systemPrompt, messages: history })
             });
+
             const data = await response.json();
             const reply = data.reply || '抱歉，我暂时无法回答。';
-            // 移除 typing 指示器
+
             typingDiv.remove();
-            // 添加 AI 回复
             currentMessages.push({ role: 'assistant', content: reply });
-            saveMessages(currentSession, currentMessages);
+            await saveMessages(currentSession, currentMessages);
             renderMessages();
+
         } catch (err) {
             typingDiv.remove();
             const errorMsg = { role: 'assistant', content: '网络开小差了，请稍后再试。' };
             currentMessages.push(errorMsg);
-            saveMessages(currentSession, currentMessages);
+            await saveMessages(currentSession, currentMessages);
             renderMessages();
         } finally {
             isWaiting = false;
         }
     }
-    
-    // ---------- 事件绑定 ----------
+
+    // ============================================================
+    // 11. 事件绑定（改为 async）
+    // ============================================================
     document.querySelectorAll('.bubble').forEach(bubble => {
         bubble.addEventListener('click', () => {
             const session = bubble.dataset.session;
             showChat(session);
         });
     });
+
     document.getElementById('backToBubblesBtn').addEventListener('click', showBubbles);
     document.getElementById('sendBtn').addEventListener('click', sendMessage);
     document.getElementById('messageInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', async () => {
         if (currentSession && confirm('清空当前分身的对话记录？')) {
-            clearSessionHistory(currentSession);
+            await clearSessionHistory(currentSession);
         }
     });
-    
-    // 初始显示气泡页
-    showBubbles();
+
+    // ============================================================
+    // 12. 【关键】页面加载时先加载用户数据，再显示界面
+    // ============================================================
+    // 先执行数据加载，完成后显示气泡页
+    (async function init() {
+        await loadUserData();
+        showBubbles();
+    })();
+
 </script>
 </body>
 </html>

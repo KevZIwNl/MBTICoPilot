@@ -243,7 +243,18 @@
     </style>
     <script src="questions.js"></script>
     <!-- 引入 Supabase JS 客户端 -->
+    <!-- 引入 Supabase JS 客户端（CDN 方式） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // 初始化 Supabase 客户端
+        const SUPABASE_URL = 'https://ylfirbefrapogvbrupfb.supabase.co';  // 替换为你的 Project URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZmlyYmVmcmFwb2d2YnJ1cGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTk2NzAsImV4cCI6MjA5NzU5NTY3MH0.QHD6YxuB7Z3pN5x8j3e3uUmjh6BOsVZORA4sKkmMrKY';                // 替换为你的 anon public key
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        console.log('Supabase 已初始化！');
+    </script>
 </head>
 <body>
 <div class="container">
@@ -627,77 +638,82 @@
     };
     Object.assign(mbtiAnalysis, extendedAnalysis);
     
-    function displayResults() {
-    const scores = computeScores();
-    const maxPossible = computeMaxPossible();
-    const mbtiRaw = inferMBTIByUserLogic(scores, maxPossible);
-    const cleanType = mbtiRaw.replace(/[^A-Z]/g, '');
-    const analysis = mbtiAnalysis[cleanType] || defaultAnalysis;
-    
-    const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
-    let dimHtml = '';
-    for (let d of dims) {
-        let percent = (scores[d] / maxPossible[d] * 100).toFixed(0);
-        dimHtml += `<div class="dim-bar"><div style="display:flex;justify-content:space-between"><span>${d}</span><span>${scores[d]}/${maxPossible[d]} (${percent}%)</span></div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div></div>`;
-    }
-    
-    // 从 localStorage 读取已有的昵称
-    const storedNickname = localStorage.getItem('userNickname') || '';
-    
-    // 构建结果 HTML，最后加上昵称输入框和跳转按钮
-    const resultHTML = `
-        <div style="text-align:center;margin-bottom:20px;"><div style="font-size:2rem;font-weight:800;background:#1e293b;display:inline-block;padding:6px 24px;border-radius:60px;color:white;">${mbtiRaw}</div></div>
-        <div><strong>🧠 认知风格</strong><br>${analysis.cognitive}</div><hr>
-        <div><strong>⚠️ 优势与盲点</strong><br>${analysis.blindspot}</div><hr>
-        <div><strong>🌱 成长建议</strong><br>${analysis.growth}</div><hr>
-        <div><strong>🤖 Copilot分身预告</strong><br>${analysis.copilot}</div><hr>
-        <div><strong>📊 八维得分</strong><br>${dimHtml}</div>
-        
-        <!-- 昵称输入和跳转按钮 -->
-        <div style="margin: 20px 0 12px 0;">
-            <label style="font-size:0.9rem;">👤 你的昵称（分身会这样称呼你）：</label>
-            <input type="text" id="nicknameInput" placeholder="输入昵称" value="${storedNickname.replace(/"/g, '&quot;')}" style="width:100%; padding:8px 12px; border-radius:30px; border:1px solid #ccc; margin-top:6px;">
-        </div>
-        <button id="gotoCopilotBtn" style="background:#8b5cf6; color:white; border:none; padding:12px; border-radius:60px; width:100%; font-weight:600; margin-top:0; cursor:pointer;">✨ 进入 Copilot 分身 ✨</button>
-        
-        <div style="font-size:0.7rem;text-align:center;margin-top:16px;">💡 拖拽排序完成 | 结果仅供参考 | 建议4-6周后复测</div>
-    `;
-    
-    const resultDiv = document.getElementById('resultArea');
-    resultDiv.innerHTML = resultHTML;
-    resultDiv.style.display = 'block';
-    resultDiv.scrollIntoView({ behavior: 'smooth' });
-    
-    // 隐藏问卷区域，只显示结果
-    const container = document.getElementById('questions-container');
-    if (container) container.style.display = 'none';
-    
-    // 绑定跳转按钮事件
-    const gotoBtn = document.getElementById('gotoCopilotBtn');
-    if (gotoBtn) {
-        gotoBtn.addEventListener('click', () => {
-            const nickname = document.getElementById('nicknameInput').value.trim();
-            if (!nickname) {
-                alert('请先输入昵称');
-                return;
-            }
-            localStorage.setItem('userNickname', nickname);
-            localStorage.setItem('userMBTI', mbtiRaw);
-            localStorage.setItem('userScores', JSON.stringify(scores));
-            localStorage.setItem('userMaxPossible', JSON.stringify(maxPossible));
-            
-            console.log('保存数据:', {
-                nickname,
-                mbti: mbtiRaw,
-                scores,
-                maxPossible
+    // index.html - displayResults 函数内部（修改后）
+
+    async function displayResults() {
+        // 1. 计算分数
+        const scores = computeScores();
+        const maxPossible = computeMaxPossible();
+        const mbtiRaw = inferMBTIByUserLogic(scores, maxPossible);
+        const cleanType = mbtiRaw.replace(/[^A-Z]/g, '');
+        const analysis = mbtiAnalysis[cleanType] || defaultAnalysis;
+
+        // 2. 构建八维进度条
+        const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
+        let dimHtml = '';
+        for (let d of dims) {
+            let percent = (scores[d] / maxPossible[d] * 100).toFixed(0);
+            dimHtml += `<div class="dim-bar"><div style="display:flex;justify-content:space-between"><span>${d}</span><span>${scores[d]}/${maxPossible[d]} (${percent}%)</span></div><div class="bar-bg"><div class="bar-fill" style="width:${percent}%"></div></div></div>`;
+        }
+        const storedNickname = localStorage.getItem('userNickname') || '';
+
+        // 4. 构建结果 HTML（所有内容一次性生成）
+        const resultHTML = `
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="font-size:2rem;font-weight:800;background:#1e293b;display:inline-block;padding:6px 24px;border-radius:60px;color:white;">${mbtiRaw}</div>
+            </div>
+            <div><strong>🧠 认知风格</strong><br>${analysis.cognitive}</div><hr>
+            <div><strong>⚠️ 优势与盲点</strong><br>${analysis.blindspot}</div><hr>
+            <div><strong>🌱 成长建议</strong><br>${analysis.growth}</div><hr>
+            <div><strong>🤖 Copilot分身预告</strong><br>${analysis.copilot}</div><hr>
+            <div><strong>📊 八维得分</strong><br>${dimHtml}</div>
+            <div style="margin: 20px 0 12px 0;">
+                <label style="font-size:0.9rem;">👤 你的昵称（分身会这样称呼你）：</label>
+                <input type="text" id="nicknameInput" placeholder="输入昵称" value="${storedNickname.replace(/"/g, '&quot;')}" style="width:100%; padding:8px 12px; border-radius:30px; border:1px solid #ccc; margin-top:6px;">
+            </div>
+            <button id="gotoCopilotBtn" style="background:#8b5cf6; color:white; border:none; padding:12px; border-radius:60px; width:100%; font-weight:600; margin-top:0; cursor:pointer;">✨ 进入 Copilot 分身 ✨</button>
+                    <div style="font-size:0.7rem;text-align:center;margin-top:16px;">💡 拖拽排序完成 | 结果仅供参考 | 建议4-6周后复测</div>
+                `;
+
+        // 5. 渲染到页面
+        const resultDiv = document.getElementById('resultArea');
+        resultDiv.innerHTML = resultHTML;
+        resultDiv.style.display = 'block';
+        resultDiv.scrollIntoView({ behavior: 'smooth' });
+
+                // 6. 隐藏问卷区域
+        const container = document.getElementById('questions-container');
+        if (container) container.style.display = 'none';
+
+        // 7. 【唯一的事件绑定】绑定跳转按钮
+        const gotoBtn = document.getElementById('gotoCopilotBtn');
+        if (gotoBtn) {
+            // 移除旧监听器（防止重复绑定）
+            gotoBtn.replaceWith(gotoBtn.cloneNode(true));
+            const newBtn = document.getElementById('gotoCopilotBtn');
+            newBtn.addEventListener('click', async () => {
+                const nickname = document.getElementById('nicknameInput').value.trim();
+                if (!nickname) {
+                    alert('请先输入昵称');
+                    return;
+                }
+                try {
+                    // ✅ 保存到 Supabase（需要 supabase.js 中已定义这两个函数）
+                    await saveAssessmentToCloud(mbtiRaw, scores, maxPossible, true);
+                    await saveNicknameToCloud(nickname);
+                    
+                    // 可选：保留 localStorage 作为界面显示的备选（非必须）
+                    localStorage.setItem('userNickname', nickname);
+                    
+                    // 跳转到 copilot 页面
+                    window.location.href = 'copilot.html';
+                } catch (error) {
+                    console.error('保存失败:', error);
+                    alert('数据保存失败，请重试或检查网络');
+                }
             });
-            
-            // 跳转到 copilot.html
-            window.location.href = 'copilot.html';
-        });
+        }
     }
-}
     
     function resetAll() {
         initSelections();
