@@ -175,14 +175,18 @@
     <!-- 引入 Supabase JS 客户端 -->
     <!-- 引入 Supabase JS 客户端（CDN 方式） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <script src="env.js"></script>
     <script>
-        // 初始化 Supabase 客户端
-        const SUPABASE_URL = 'https://ylfirbefrapogvbrupfb.supabase.co';  // 替换为你的 Project URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsZmlyYmVmcmFwb2d2YnJ1cGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTk2NzAsImV4cCI6MjA5NzU5NTY3MH0.QHD6YxuB7Z3pN5x8j3e3uUmjh6BOsVZORA4sKkmMrKY';                // 替换为你的 anon public key
-
+        // 现在可以直接使用 env.js 中生成的全局变量
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://你的默认URL备用';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '你的默认密钥备用';
+        
+        // 同样要检查是否加载成功，防止部署时变量为空
+        if (!SUPABASE_URL || SUPABASE_URL === 'undefined') {
+            console.error("Supabase 密钥未加载，请检查构建命令");
+        }
+        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         console.log('Supabase 已初始化！');
     </script>
 </head>
