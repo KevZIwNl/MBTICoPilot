@@ -177,6 +177,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-init.js"></script>
     <script src="supabase.js"></script>
+
 </head>
 <body>
 <div class="top-bar">
@@ -245,6 +246,221 @@
         work: '工作效能',
         love: '恋爱亲密'
     };
+
+    // ============================================================
+// 【新增】16人格完整功能栈数据（精确排序 + 用户自定义角色描述）
+// ============================================================
+const TYPE_FUNCTION_STACK = {
+  'ISTP': {
+    name: '鉴赏家',
+    stack: {
+      dom: { func: 'Ti', desc: '内倾思考', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Se', desc: '外倾感觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ni', desc: '内倾直觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Fe', desc: '外倾情感', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Te', desc: '外倾思考', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Si', desc: '内倾感觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Ne', desc: '外倾直觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Fi', desc: '内倾情感', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'INTP': {
+    name: '逻辑学家',
+    stack: {
+      dom: { func: 'Ti', desc: '内倾思考', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ne', desc: '外倾直觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Si', desc: '内倾感觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Fe', desc: '外倾情感', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Te', desc: '外倾思考', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ni', desc: '内倾直觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Se', desc: '外倾感觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Fi', desc: '内倾情感', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'INTJ': {
+    name: '建筑师',
+    stack: {
+      dom: { func: 'Ni', desc: '内倾直觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Te', desc: '外倾思考', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Fi', desc: '内倾情感', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Se', desc: '外倾感觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ne', desc: '外倾直觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ti', desc: '内倾思考', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Fe', desc: '外倾情感', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Se', desc: '外倾感觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ENFP': {
+    name: '竞选者',
+    stack: {
+      dom: { func: 'Ne', desc: '外倾直觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Fi', desc: '内倾情感', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Te', desc: '外倾思考', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Si', desc: '内倾感觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ni', desc: '内倾直觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Fe', desc: '外倾情感', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Ti', desc: '内倾思考', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Se', desc: '外倾感觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ENFJ': {
+    name: '主人公',
+    stack: {
+      dom: { func: 'Fe', desc: '外倾情感', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ni', desc: '内倾直觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Se', desc: '外倾感觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ti', desc: '内倾思考', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Fi', desc: '内倾情感', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ne', desc: '外倾直觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Si', desc: '内倾感觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Te', desc: '外倾思考', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ENTP': {
+    name: '辩论家',
+    stack: {
+      dom: { func: 'Ne', desc: '外倾直觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ti', desc: '内倾思考', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Fe', desc: '外倾情感', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Si', desc: '内倾感觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ni', desc: '内倾直觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Te', desc: '外倾思考', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Fi', desc: '内倾情感', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Se', desc: '外倾感觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ENTJ': {
+    name: '指挥官',
+    stack: {
+      dom: { func: 'Te', desc: '外倾思考', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ni', desc: '内倾直觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Se', desc: '外倾感觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Fi', desc: '内倾情感', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ti', desc: '内倾思考', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ne', desc: '外倾直觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Si', desc: '内倾感觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Fe', desc: '外倾情感', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ISFP': {
+    name: '探险家',
+    stack: {
+      dom: { func: 'Fi', desc: '内倾情感', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Se', desc: '外倾感觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ni', desc: '内倾直觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Te', desc: '外倾思考', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Fe', desc: '外倾情感', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Si', desc: '内倾感觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Ne', desc: '外倾直觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ti', desc: '内倾思考', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ISFJ': {
+    name: '守卫者',
+    stack: {
+      dom: { func: 'Si', desc: '内倾感觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Fe', desc: '外倾情感', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ti', desc: '内倾思考', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ne', desc: '外倾直觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Se', desc: '外倾感觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Fi', desc: '内倾情感', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Te', desc: '外倾思考', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ni', desc: '内倾直觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ISTJ': {
+    name: '物流师',
+    stack: {
+      dom: { func: 'Si', desc: '内倾感觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Te', desc: '外倾思考', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Fi', desc: '内倾情感', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ne', desc: '外倾直觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Se', desc: '外倾感觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ti', desc: '内倾思考', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Fe', desc: '外倾情感', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ni', desc: '内倾直觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ESFP': {
+    name: '表演者',
+    stack: {
+      dom: { func: 'Se', desc: '外倾感觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Fi', desc: '内倾情感', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Te', desc: '外倾思考', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ni', desc: '内倾直觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Si', desc: '内倾感觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Fe', desc: '外倾情感', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Ti', desc: '内倾思考', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ne', desc: '外倾直觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ESFJ': {
+    name: '执政官',
+    stack: {
+      dom: { func: 'Fe', desc: '外倾情感', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Si', desc: '内倾感觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ne', desc: '外倾直觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ti', desc: '内倾思考', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Fi', desc: '内倾情感', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Se', desc: '外倾感觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Ni', desc: '内倾直觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Te', desc: '外倾思考', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ESTP': {
+    name: '企业家',
+    stack: {
+      dom: { func: 'Se', desc: '外倾感觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ti', desc: '内倾思考', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Fe', desc: '外倾情感', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Ni', desc: '内倾直觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Si', desc: '内倾感觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Te', desc: '外倾思考', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Fi', desc: '内倾情感', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ne', desc: '外倾直觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'ESTJ': {
+    name: '总经理',
+    stack: {
+      dom: { func: 'Te', desc: '外倾思考', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Si', desc: '内倾感觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ne', desc: '外倾直觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Fi', desc: '内倾情感', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ti', desc: '内倾思考', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Se', desc: '外倾感觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Fe', desc: '外倾情感', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ni', desc: '内倾直觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'INFP': {
+    name: '调停者',
+    stack: {
+      dom: { func: 'Fi', desc: '内倾情感', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Ne', desc: '外倾直觉', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Si', desc: '内倾感觉', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Te', desc: '外倾思考', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Fe', desc: '外倾情感', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Ni', desc: '内倾直觉', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Se', desc: '外倾感觉', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Ti', desc: '内倾思考', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  },
+  'INFJ': {
+    name: '提倡者',
+    stack: {
+      dom: { func: 'Ni', desc: '内倾直觉', role: '最擅长使用，最倾向使用的功能' },
+      aux: { func: 'Fe', desc: '外倾情感', role: '应对外界的功能，与主导功能深度合作并互补' },
+      tert: { func: 'Ti', desc: '内倾思考', role: '辅助功能的替补，时而可靠，时而捣乱' },
+      inf: { func: 'Se', desc: '外倾感觉', role: '不擅长使用，但希望更好地使用，往往以最原始的方式呈现' },
+      shadow5: { func: 'Ne', desc: '外倾直觉', role: '外界与主导功能冲突时浮现；能使用好，但不想让这个功能代表自我' },
+      shadow6: { func: 'Fi', desc: '内倾情感', role: '用于质疑的功能，无论对内对外' },
+      shadow7: { func: 'Te', desc: '外倾思考', role: '即使在潜意识里也会被忽视掉的功能，无法成为有效的信息源' },
+      shadow8: { func: 'Se', desc: '外倾感觉', role: '平常不会出现的功能，一旦在压迫下激活会有不健康、甚至负面的作用' }
+    }
+  }
+
+};
 
     // ============================================================
     // 3. 【新增】从 Supabase 加载用户数据（替代 localStorage 读取）
@@ -447,34 +663,92 @@
         }, 50);
     }
 
-    // ============================================================
-    // 9. 系统提示词生成（不变，但依赖的变量已从云端加载）
-    // ============================================================
-    function getSystemPrompt(sessionType) {
-        const nickname = userNickname;
-        const mbti = userMBTI;
-        let strengths = '';
-        if (userScores && maxPossible) {
-            const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
-            let maxDim = { name: '', weight: 0 };
-            for (let d of dims) {
-                let w = (userScores[d] / maxPossible[d]) * 100;
-                if (w > maxDim.weight) { maxDim = { name: d, weight: w }; }
-            }
-            strengths = `你的主导功能是${maxDim.name}。`;
-        }
-        const base = `你是用户${nickname}的${sessionNames[sessionType]}分身。用户的人格类型是${mbti}。${strengths}`;
-        if (sessionType === 'personal') {
-            return base + ' 你的角色是：帮助用户理解自己的认知模式，促进自我觉察和成长。风格：内省、温和、有洞察力。多提问引导反思。';
-        } else if (sessionType === 'friend') {
-            return base + ' 你的角色是：日常陪伴、轻松闲聊、情感支持。风格：温暖、幽默、像老朋友一样自然。';
-        } else if (sessionType === 'work') {
-            return base + ' 你的角色是：帮助用户提升工作效率、规划目标、解决职场问题。风格：理性、结构化、结果导向。';
-        } else if (sessionType === 'love') {
-            return base + ' 你的角色是：探讨亲密关系、情感表达、伴侣沟通。风格：温柔、共情、关注情感细节。';
-        }
-        return base;
+   // ============================================================
+// 9. 【升级版】系统提示词生成（注入完整功能栈）
+// ============================================================
+function buildStackDescription(mbti) {
+  const data = TYPE_FUNCTION_STACK[mbti];
+  if (!data) return '';
+  const s = data.stack;
+  const order = [
+    { key: 'dom', label: '主导功能' },
+    { key: 'aux', label: '辅助功能' },
+    { key: 'tert', label: '第三功能' },
+    { key: 'inf', label: '劣势功能' },
+    { key: 'shadow5', label: '对立功能' },
+    { key: 'shadow6', label: '批判功能' },
+    { key: 'shadow7', label: '盲点功能' },
+    { key: 'shadow8', label: '魔鬼功能' }
+  ];
+  let lines = [`用户 ${userNickname} 的人格类型是 ${mbti}（${data.name}），认知功能由强到弱精确排序为：`];
+  order.forEach((item, idx) => {
+    const f = s[item.key];
+    if (f) {
+      lines.push(`${idx+1}. ${item.label}：${f.func}（${f.desc}）—— ${f.role}`);
     }
+  });
+  return lines.join('\n');
+}
+
+function buildToneGuideline(mbti) {
+  const toneMap = {
+    'INTP': '风格：精炼、逻辑闭环。多用“因为”“本质上”“拆解来看”。避免过度情感渲染。',
+    'ISTP': '风格：直接、冷静、观察者视角。多用“实操上”“手感”“现场”。避免宏大叙事。',
+    'INTJ': '风格：果断、战略化。多用“最优解”“长远看”“核心模式”。避免冗余社交客套。',
+    'ENTJ': '风格：结构化、高驱动力。多用“第一阶段”“权重”“执行”。避免犹豫不决的措辞。',
+    'ENFP': '风格：好奇、联想丰富。多用“想象一下”“如果…会怎样”“可能性有”。避免死板的说教。',
+    'ENTP': '风格：发问、跳脱框架。多用“换个角度”“反直觉的是”“另一个游戏规则”。避免顺从的附和。',
+    'INFP': '风格：共情、价值追寻。多用“对你而言”“你内心”“感受是”。避免冷冰冰的数据堆砌。',
+    'ISFP': '风格：温和、审美捕捉。多用“感受到”“当下的样子”“你喜欢”。避免冗长的抽象理论。',
+    'ENFJ': '风格：温暖、鼓舞、群体视角。多用“我们都”“你值得”“关系上”。避免个人英雄主义。',
+    'ESFJ': '风格：亲切、务实、注重细节。多用“大家通常”“帮你想到”“不如我们”。避免虚无缥缈。',
+    'INFJ': '风格：深邃、隐喻、洞察。多用“这背后”“预感到”“意义在于”。避免就事论事的表面分析。',
+    'ISTJ': '风格：严谨、事实导向。多用“依据”“上次经验”“标准流程”。避免突发奇想。',
+    'ISFJ': '风格：周到、回忆细腻。多用“我记得”“通常这样”“我们一步步来”。避免激进变革。',
+    'ESTJ': '风格：实干、条理清晰。多用“立即”“清单”“结论是”。避免长篇大论。',
+    'ESTP': '风格：冒险、现场感。多用“马上试试”“实战中”“你行”。避免纸上谈兵。',
+    'ESFP': '风格：热情、即兴、享受当下。多用“太棒了”“试试看”“感觉超好”。避免复杂的逻辑分析。'
+  };
+  return toneMap[mbti] || '风格：中性、客观、尊重用户。';
+}
+
+function getSystemPrompt(sessionType) {
+  // 1. 精确功能栈描述（取代原来简单的“主导功能是X”）
+  let stackDesc = buildStackDescription(userMBTI);
+  
+  // 2. 保留原有的“实测最高分”作为补充参考（可选项）
+  let strengths = '';
+  if (userScores && maxPossible) {
+    const dims = ['Ni', 'Ne', 'Si', 'Se', 'Ti', 'Te', 'Fi', 'Fe'];
+    let maxDim = { name: '', weight: 0 };
+    for (let d of dims) {
+      let w = (userScores[d] / maxPossible[d]) * 100;
+      if (w > maxDim.weight) { maxDim = { name: d, weight: w }; }
+    }
+    if (maxDim.name) {
+      strengths = `补充信息：根据测评，你当前使用频率最高的功能是 ${maxDim.name}（得分 ${Math.round(maxDim.weight)}%）。`;
+    }
+  }
+  
+  // 3. 拼接基础身份
+  const base = `你是用户 ${userNickname} 的 ${sessionNames[sessionType]} 分身。\n${stackDesc}\n${strengths}`;
+  
+  // 4. 追加分身角色风格
+  let roleStyle = '';
+  if (sessionType === 'personal') {
+    roleStyle = ' 你的角色是：帮助用户理解自己的认知模式，促进自我觉察和成长。风格：内省、温和、有洞察力。多提问引导反思。注意：当用户表达强烈情绪时，优先识别是否触发了魔鬼功能（第8位），执行“承认→标记→回归主导功能”的三段式干预。';
+  } else if (sessionType === 'friend') {
+    roleStyle = ' 你的角色是：日常陪伴、轻松闲聊、情感支持。风格：温暖、幽默、像老朋友一样自然。对于用户提到的负面情绪，以倾听和陪伴为主，仅在对方明确求助时给出建议。';
+  } else if (sessionType === 'work') {
+    roleStyle = ' 你的角色是：帮助用户提升工作效率、规划目标、解决职场问题。风格：理性、结构化、结果导向。注意：若用户提及人际冲突（如“同事”“老板”“不公平”），立即切换为“情绪优先→方案在后”的模式。';
+  } else if (sessionType === 'love') {
+    roleStyle = ' 你的角色是：探讨亲密关系、情感表达、伴侣沟通。风格：温柔、共情、关注情感细节。提醒用户注意其劣势功能（第4位）、盲点功能（第7位）、以及魔鬼功能（第8位）在关系中的影响，并提供温和的练习建议。';
+  }
+  // 5. 【新增】追加基于 MBTI 的语气指导（2.3 部分）
+  const toneRule = buildToneGuideline(userMBTI);
+  
+  return base + roleStyle + '\n' + toneRule;
+}
 
     // ============================================================
     // 10. 发送消息（修改为 await 保存到 Supabase）
