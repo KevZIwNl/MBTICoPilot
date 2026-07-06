@@ -1,5 +1,12 @@
 // netlify/functions/deepseek.js
 exports.handler = async (event) => {
+    
+    console.log("🚀 Function invoked at:", new Date().toISOString());
+    console.log("📝 HTTP Method:", event.httpMethod);
+    console.log("🔗 Path:", event.path);
+    console.log("👤 Headers:", JSON.stringify(event.headers));
+    console.log("📦 Body:", event.body); 
+
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
