@@ -1,6 +1,21 @@
 // netlify/functions/deepseek.js
 exports.handler = async (event) => {
     
+    const API_CLIENT_TOKEN = process.env.API_CLIENT_TOKEN;
+    const clientToken = event.headers['x-custom-auth'];
+    
+    // 如果环境变量未配置，或 Token 不匹配，直接拒绝
+    if (!API_CLIENT_TOKEN || clientToken !== API_CLIENT_TOKEN) {
+        console.warn('⚠️ 未授权的请求被拒绝', {
+            ip: event.headers['client-ip'] || event.headers['x-forwarded-for'] || 'unknown',
+            userAgent: event.headers['user-agent'] || 'unknown'
+        });
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Unauthorized' })
+        };
+    }
+
     console.log("🚀 Function invoked at:", new Date().toISOString());
     console.log("📝 HTTP Method:", event.httpMethod);
     console.log("🔗 Path:", event.path);
@@ -80,4 +95,4 @@ exports.handler = async (event) => {
             body: JSON.stringify({ error: 'Internal server error' })
         };
     }
-};
+}

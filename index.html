@@ -282,17 +282,74 @@
 
     // 从母题库中随机抽取 count 道题
     function getRandomQuestions(questionsArray, count) {
-        if (count > questionsArray.length) {
-            console.warn(`抽取数量 ${count} 超过题库大小 ${questionsArray.length}，返回全部题库`);
-            return [...questionsArray];
-        }
-        const shuffled = [...questionsArray];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled.slice(0, count);
+    // 兜底：如果题库不足，返回全部
+    if (count > questionsArray.length) {
+        console.warn(`抽取数量 ${count} 超过题库大小 ${questionsArray.length}，返回全部题库`);
+        return [...questionsArray];
     }
+
+    // 1. 将题库按轴分类（通过第一个选项的 dim 判断）
+    const perceiving = []; // 感知轴：Se, Si, Ne, Ni
+    const judging = [];    // 判断轴：Te, Ti, Fe, Fi
+
+    questionsArray.forEach(q => {
+        // 跳过空题（防御）
+        if (!q.options || q.options.length === 0) return;
+        const firstDim = q.options[0].dim;
+        if (['Se', 'Si', 'Ne', 'Ni'].includes(firstDim)) {
+            perceiving.push(q);
+        } else if (['Te', 'Ti', 'Fe', 'Fi'].includes(firstDim)) {
+            judging.push(q);
+        } else {
+            // 如果某个题的 dim 不在预期中（极少情况），默认归入感知轴以保底
+            perceiving.push(q);
+        }
+    });
+
+    // 2. 洗牌函数（Fisher-Yates）
+    const shuffle = (arr) => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+
+    // 3. 各取一半（各 10 题）
+    const half = count / 2; // 10
+    const shuffledP = shuffle(perceiving);
+    const shuffledJ = shuffle(judging);
+
+    let selected = [];
+
+    // 从感知轴取 half 题
+    if (shuffledP.length >= half) {
+        selected = selected.concat(shuffledP.slice(0, half));
+    } else {
+        // 兜底：感知题不足，取全部感知题
+        selected = selected.concat(shuffledP);
+    }
+
+    // 从判断轴取 half 题
+    if (shuffledJ.length >= half) {
+        selected = selected.concat(shuffledJ.slice(0, half));
+    } else {
+        // 兜底：判断题不足，取全部判断题
+        selected = selected.concat(shuffledJ);
+    }
+
+    // 4. 如果总数不足 count（极端情况，实际不会发生），从原始题库随机补全
+    while (selected.length < count) {
+        const remaining = questionsArray.filter(q => !selected.includes(q));
+        if (remaining.length === 0) break;
+        const pick = remaining[Math.floor(Math.random() * remaining.length)];
+        selected.push(pick);
+    }
+
+    // 5. 最后打乱顺序，避免“前半部分全是感知题”
+    return shuffle(selected);
+}
 
 // 初始化题库：从 MASTER_QUESTIONS 中随机抽取20题
     function initQuestions() {

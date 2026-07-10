@@ -780,7 +780,10 @@ function getSystemPrompt(sessionType) {
 
             const response = await fetch('/.netlify/functions/deepseek', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-custom-auth': '361e161608750d6666b58a8dd44ee18b347d6ae71ad5e701e2fe52b94f2307bb' 
+                 },
                 body: JSON.stringify({ systemPrompt, messages: history })
             });
 
