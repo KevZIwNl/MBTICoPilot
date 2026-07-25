@@ -1,0 +1,8 @@
+
+[build]
+  publish = "."
+
+# 注册 Edge Function（指向 netlify/edge-functions/ 目录下的文件）
+[[edge_functions]]
+  function = "firewall"
+  path = "/.netlify/functions/deepseek"
