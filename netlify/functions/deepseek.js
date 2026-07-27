@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     }
 
     // netlify/functions/deepseek.js
-import { getStore } from '@netlify/blobs'; // 本地开发时需要，部署后 Netlify 会自动注入
+const { getStore } = require('@netlify/blobs'); // 本地开发时需要，部署后 Netlify 会自动注入
 
 // ============================================================
 // 黑名单配置
